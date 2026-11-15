@@ -3,7 +3,7 @@
 # Pe MacBook:  curl -fsSL <adresa>/install.sh | sudo bash
 set -uo pipefail
 
-ACM_REPO="${ACM_REPO:-https://github.com/GITHUB_USER/acm-os.git}"
+ACM_REPO="${ACM_REPO:-https://github.com/mandrutaniel5-gif/acm-os.git}"
 ACM_DIR=/opt/acm-os
 
 [ "$(id -u)" -eq 0 ] || { echo "Rulează cu sudo."; exit 1; }
