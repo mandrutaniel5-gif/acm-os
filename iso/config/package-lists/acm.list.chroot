@@ -1,0 +1,9 @@
+# Restul pachetelor le instalează acm-apply din hook (system/packages.txt)
+kde-plasma-desktop
+xorg
+calamares
+calamares-settings-debian
+git
+curl
+ca-certificates
+gpg

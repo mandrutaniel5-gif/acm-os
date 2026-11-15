@@ -1,0 +1,14 @@
+[Unit]
+Description=ACM OS: finalizare după instalare
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/acm/firstboot-done
+ConditionKernelCommandLine=!boot=live
+
+[Service]
+Type=oneshot
+ExecStart=/opt/acm-os/system/bin/acm-firstboot
+TimeoutStartSec=30min
+
+[Install]
+WantedBy=multi-user.target

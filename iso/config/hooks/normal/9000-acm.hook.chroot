@@ -1,0 +1,13 @@
+#!/bin/sh
+# Pune ACM OS în imagine: clonează repository-ul la ultima versiune și aplică configurația.
+set -e
+git clone -q https://github.com/mandrutaniel5-gif/acm-os.git /opt/acm-os
+tag="$(git -C /opt/acm-os tag -l 'v*' | sed 's/^v//' | sort -V | tail -n1)"
+git -C /opt/acm-os checkout -q "v$tag"
+ACM_IMAGE=1 /opt/acm-os/system/bin/acm-apply
+
+# Instalatorul se numește „Instalează ACM OS”
+for f in /usr/share/applications/*calamares*.desktop /usr/share/applications/install-debian.desktop /etc/skel/Desktop/*.desktop; do
+  [ -f "$f" ] && sed -i -e 's/^Name=.*/Name=Instalează ACM OS/' -e 's/^Name\[ro\]=.*/Name[ro]=Instalează ACM OS/' "$f"
+done
+apt-get clean

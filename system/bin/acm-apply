@@ -8,6 +8,8 @@ need_root
 SYS="$ACM_DIR/system"
 USER_NAME="$(main_user)"
 VERSION="$(cat "$ACM_DIR/VERSION")"
+# ACM_IMAGE=1: rulăm în chroot-ul de construire a ISO-ului (fără utilizator, fără kernel propriu, fără Btrfs)
+IMAGE="${ACM_IMAGE:-0}"
 export DEBIAN_FRONTEND=noninteractive
 mkdir -p "$ACM_STATE"
 
@@ -31,7 +33,9 @@ ok "surse apt"
 # 2. Pachete
 apt-get update -q
 mapfile -t PKGS < <(sed 's/#.*//' "$SYS/packages.txt" | tr -s ' \t' '\n' | grep -v '^$')
-apt-get install -y -q "${PKGS[@]}" "linux-headers-$(uname -r)" || warn "unele pachete nu s-au instalat (vezi mai sus)"
+[ "$IMAGE" = 1 ] || PKGS+=("linux-headers-$(uname -r)")
+# dacă un pachet lipsește din arhivă, apt refuză tot; atunci le instalăm pe rând
+apt-get install -y -q "${PKGS[@]}" || for p in "${PKGS[@]}"; do apt-get install -y -q "$p" || warn "nu s-a instalat: $p"; done
 ok "pachete"
 
 # 3. Fișierele ACM OS peste sistem
@@ -45,7 +49,7 @@ timedatectl set-timezone Europe/Bucharest 2>/dev/null || ln -sf /usr/share/zonei
 ok "română, ora României"
 
 # 5. Pornire rapidă: GRUB fără așteptare (Shift arată meniul), autologin în Plasma
-update-grub >/dev/null 2>&1 || true
+[ "$IMAGE" = 1 ] || update-grub >/dev/null 2>&1 || true
 SESSION=plasma
 [ -f /usr/share/xsessions/plasmax11.desktop ] && SESSION=plasmax11
 if [ -n "$USER_NAME" ]; then
@@ -57,7 +61,7 @@ ok "pornire rapidă ($SESSION)"
 # 6. Servicii
 systemctl enable -q mbpfan 2>/dev/null || true
 for s in ModemManager.service cups-browsed.service; do systemctl disable -q --now "$s" 2>/dev/null || true; done
-systemctl enable -q acm-update-check.timer
+systemctl enable -q acm-update-check.timer acm-firstboot.service
 ok "servicii"
 
 # 7. Snapshot-uri (doar dacă discul e Btrfs)
