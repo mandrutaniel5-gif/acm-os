@@ -1,0 +1,41 @@
+# Pachete instalate de acm-apply. Un pachet pe linie, comentariile cu #.
+
+# --- drivere MacBook Pro 13" 2010 (MacBookPro7,1) ---
+linux-headers-amd64          # necesar pentru driverul Wi-Fi (dkms)
+broadcom-sta-dkms            # Wi-Fi Broadcom BCM4322 (driverul wl)
+mbpfan                       # controlul ventilatorului prin SMC
+lm-sensors                   # temperaturi
+alsa-utils                   # sunet (codec Cirrus CS4206, quirk inclus în kernel)
+pipewire-audio
+bluez
+
+# --- desktop ---
+plasma-desktop
+sddm
+plasma-nm
+plasma-pa
+bluedevil
+powerdevil
+kscreen
+systemsettings
+konsole
+dolphin
+ark
+gwenview
+okular
+kde-spectacle
+fonts-inter
+fonts-jetbrains-mono
+
+# --- sistem ---
+git
+curl
+gpg
+btrfs-progs
+snapper
+systemd-zram-generator
+nodejs
+npm
+
+# --- aplicații ---
+google-chrome-stable

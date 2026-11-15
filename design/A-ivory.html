@@ -1,0 +1,66 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
+<style>
+  .about { left: 150px; top: 120px; width: 600px; }
+  .about .body { display: flex; gap: 34px; padding: 34px 38px 30px; }
+  .about .seal-big { width: 150px; height: 150px; flex: none; }
+  .about h1 { font-size: 30px; font-weight: 600; letter-spacing: -.02em; }
+  .about h1 span { font-weight: 300; color: var(--ink2); }
+  .about .ver { font-size: 13px; color: var(--ink2); margin: 4px 0 18px; }
+  .spec { display: grid; grid-template-columns: 110px 1fr; row-gap: 7px; font-size: 13px; }
+  .spec dt { color: var(--ink2); }
+  .about .foot { display: flex; gap: 10px; padding: 0 38px 28px 222px; }
+
+  .upd { left: 690px; top: 330px; width: 430px; z-index: 6; }
+  .upd .body { padding: 20px 22px 22px; font-size: 13px; }
+  .row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--win-line); }
+  .row:last-of-type { border-bottom: 0; }
+  .bar { height: 6px; background: var(--chip); border-radius: 9px; margin: 14px 0 6px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 64%; background: var(--gold); border-radius: 9px; }
+</style></head>
+<body class="ivory">
+<img class="wall-seal" src="sigiliu-pe-fundal-deschis.svg" style="opacity:.08;width:760px;height:760px;right:-120px;top:40px">
+<div id="mb"></div>
+
+<div class="window about">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="t"></div></div>
+  <div class="body">
+    <img class="seal-big" src="sigiliu-pe-fundal-deschis.svg">
+    <div>
+      <h1>ACM OS <span>Aur</span></h1>
+      <div class="ver">Versiunea 1.0 &nbsp;·&nbsp; canal stabil</div>
+      <dl class="spec">
+        <dt>Computer</dt><dd>MacBook Pro 13" (2010)</dd>
+        <dt>Procesor</dt><dd>Intel Core 2 Duo 2,40 GHz</dd>
+        <dt>Memorie</dt><dd>4 GB DDR3 1066 MHz</dd>
+        <dt>Grafică</dt><dd>NVIDIA GeForce 320M</dd>
+        <dt>Disc</dt><dd>SSD · 41 GB liberi din 120 GB</dd>
+        <dt>Baterie</dt><dd><span class="ok">●</span> Se încarcă · sănătate 78%</dd>
+      </dl>
+    </div>
+  </div>
+  <div class="foot"><span class="btn ghost">Raport sistem…</span><span class="btn ghost">Drivere</span></div>
+</div>
+
+<div class="window upd">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="t">Actualizări</div></div>
+  <div class="body">
+    <div style="font-size:15px;font-weight:600">ACM OS 1.1 se instalează</div>
+    <div class="muted" style="margin-top:3px">Fără reinstalare. Repornire de 8 secunde la final.</div>
+    <div class="bar"><i></i></div>
+    <div class="muted" style="font-size:12px">64% · aproximativ 1 minut</div>
+    <div style="margin-top:16px">
+      <div class="row"><span>Tema Aur — ajustări dock</span><span class="chip">design</span></div>
+      <div class="row"><span>Google Chrome 142</span><span class="chip">aplicație</span></div>
+      <div class="row"><span>Driver audio Cirrus — volum mai mare</span><span class="chip">driver</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="dk"></div>
+<div class="caption">Varianta A · Ivory — luminos, cald, ca o foaie de hârtie</div>
+<script src="common.js"></script>
+<script>
+  mb.outerHTML = menubar('Despre', ['Fișier', 'Editare', 'Fereastră', 'Ajutor'], 'sigiliu-pe-fundal-deschis.svg');
+  dk.outerHTML = dock(['files', 'chrome', 'update']);
+</script>
+</body></html>

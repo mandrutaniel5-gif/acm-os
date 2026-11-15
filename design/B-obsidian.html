@@ -1,0 +1,74 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
+<style>
+  .glow { position: absolute; width: 700px; height: 700px; right: -80px; top: 60px; border-radius: 50%;
+          background: radial-gradient(circle, rgba(201,165,116,.16), transparent 62%); }
+  .studio { left: 110px; top: 74px; width: 840px; height: 560px; display: flex; flex-direction: column; }
+  .studio .main { display: flex; flex: 1; min-height: 0; }
+  .side { width: 210px; background: var(--win-side); padding: 16px 12px; font-size: 13px; border-right: 1px solid var(--win-line); }
+  .side .h { font-size: 11px; color: var(--ink2); text-transform: uppercase; letter-spacing: .1em; margin: 10px 8px 8px; }
+  .side .it { padding: 7px 10px; border-radius: 8px; display: flex; align-items: center; gap: 9px; }
+  .side .it.on { background: var(--chip); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); }
+  .content { flex: 1; padding: 26px 30px; overflow: hidden; }
+  .content h2 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .pipe { display: flex; align-items: center; margin: 26px 0 22px; }
+  .step { flex: 1; text-align: center; font-size: 12px; color: var(--ink2); }
+  .step .c { width: 34px; height: 34px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center; font-size: 15px;
+             border: 1.5px solid var(--win-line); color: var(--ink2); }
+  .step.done .c { background: var(--gold); color: #111; border-color: var(--gold); }
+  .step.now .c { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 5px rgba(201,165,116,.15); }
+  .step.now { color: var(--ink); }
+  .line { height: 2px; flex: .6; background: var(--win-line); margin-bottom: 22px; }
+  .line.done { background: var(--gold); }
+  .log { background: #0d0d0e; border: 1px solid var(--win-line); border-radius: 10px; padding: 14px 16px; font-size: 12px; line-height: 1.75; color: #b9b4aa; height: 190px; }
+  .log b { color: #f3f2ee; font-weight: 500; }
+  .acts { display: flex; gap: 10px; margin-top: 18px; align-items: center; }
+</style></head>
+<body class="obsidian">
+<div class="glow"></div>
+<img class="wall-seal" src="sigiliu-pe-fundal-inchis.svg" style="opacity:.06;width:640px;height:640px;right:-40px;top:90px">
+<div id="mb"></div>
+
+<div class="window studio">
+  <div class="titlebar"><div class="lights"><i></i><i></i><i></i></div><div class="t">ACM Studio</div></div>
+  <div class="main">
+    <div class="side">
+      <div class="h">Proiecte</div>
+      <div class="it on"><span class="dot"></span>Bubu &amp; Dudu</div>
+      <div class="it"><span class="dot" style="background:#6f8f6a"></span>ISM Radio</div>
+      <div class="it"><span class="dot" style="background:#6b7fa8"></span>CarHub</div>
+      <div class="h" style="margin-top:22px">Conturi</div>
+      <div class="it">App Store Connect <span class="ok" style="margin-left:auto">●</span></div>
+      <div class="it">GitHub <span class="ok" style="margin-left:auto">●</span></div>
+    </div>
+    <div class="content">
+      <div class="muted" style="font-size:12px">Flutter · iOS + Android · ramura main</div>
+      <h2>Publică Bubu &amp; Dudu 1.4.0</h2>
+      <div class="pipe">
+        <div class="step done"><div class="c">✓</div>Cod trimis</div><div class="line done"></div>
+        <div class="step done"><div class="c">✓</div>Teste</div><div class="line done"></div>
+        <div class="step now"><div class="c">◐</div>Build iOS pe Mac în cloud</div><div class="line"></div>
+        <div class="step"><div class="c">↑</div>TestFlight</div><div class="line"></div>
+        <div class="step"><div class="c">★</div>App Store</div>
+      </div>
+      <div class="log mono">
+        <b>▸ codemagic</b> mac mini M2 · Xcode 26<br>
+        ✓ flutter pub get<br>
+        ✓ pod install (42 pods)<br>
+        ✓ semnare cu cheia App Store Connect<br>
+        ▸ flutter build ipa --release …<br>
+        <span class="gold">  compilare Runner 71%</span>
+      </div>
+      <div class="acts"><span class="btn">Trimite în TestFlight când e gata</span><span class="btn ghost">Deschide în VS Code</span><span class="muted" style="font-size:12px;margin-left:auto">≈ 4 min rămase</span></div>
+    </div>
+  </div>
+</div>
+
+<div id="dk"></div>
+<div class="caption">Varianta B · Obsidian — negru adânc, auriu, focus pe lucru</div>
+<script src="common.js"></script>
+<script>
+  mb.outerHTML = menubar('ACM Studio', ['Fișier', 'Proiect', 'Publică', 'Fereastră', 'Ajutor'], 'sigiliu-pe-fundal-inchis.svg');
+  dk.outerHTML = dock(['files', 'chrome', 'code', 'studio']);
+</script>
+</body></html>

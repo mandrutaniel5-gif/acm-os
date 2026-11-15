@@ -1,0 +1,208 @@
+﻿<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
+<style>
+  .wallseal { position: absolute; pointer-events: none; }
+  .ivory .wallseal { width: 760px; height: 760px; left: -170px; bottom: -260px; opacity: .07; }
+  .obsidian .wallseal { width: 700px; height: 700px; left: -150px; bottom: -240px; opacity: .07; }
+  .olive .wallseal { width: 680px; height: 680px; left: -160px; bottom: -230px; opacity: .13; }
+  .glow { position: absolute; width: 760px; height: 760px; left: 120px; top: 40px; border-radius: 50%; pointer-events: none;
+          background: radial-gradient(circle, rgba(201,165,116,.13), transparent 62%); }
+  .ivory .glow { background: radial-gradient(circle, rgba(255,255,255,.55), transparent 62%); }
+
+  /* widgets (from C) */
+  .widgets { position: absolute; right: 22px; top: 44px; width: 236px; display: flex; flex-direction: column; gap: 12px; z-index: 4; }
+  .w { background: var(--glass); border: 1px solid var(--glass-line); border-radius: 16px; padding: 14px 16px; font-size: 13px; backdrop-filter: blur(24px);
+       box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+  .w .big { font-size: 36px; font-weight: 300; letter-spacing: -.02em; line-height: 1.15; }
+  .w .h { font-weight: 600; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .ring { width: 52px; height: 52px; flex: none; }
+  .ring .bg { stroke: var(--chip); }
+  .proj { display: flex; align-items: center; gap: 9px; padding: 5px 0; }
+  .proj .s { margin-left: auto; font-size: 11px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); flex: none; }
+  .kv { display: flex; justify-content: space-between; padding: 2px 0; }
+
+  /* studio (from B) */
+  .studio { left: 34px; top: 52px; width: 940px; height: 600px; display: flex; flex-direction: column; }
+  .studio .main { display: flex; flex: 1; min-height: 0; }
+  .side { width: 200px; background: var(--win-side); padding: 14px 12px; font-size: 13px; border-right: 1px solid var(--win-line); }
+  .side .hd { font-size: 11px; color: var(--ink2); text-transform: uppercase; letter-spacing: .1em; margin: 10px 8px 8px; }
+  .side .it { padding: 7px 10px; border-radius: 8px; display: flex; align-items: center; gap: 9px; }
+  .side .it.on { background: var(--chip); }
+  .content { flex: 1; padding: 26px 32px; }
+  .content h2 { font-size: 22px; font-weight: 600; letter-spacing: -.01em; }
+  .pipe { display: flex; align-items: center; margin: 26px 0 22px; }
+  .step { flex: 1; text-align: center; font-size: 12px; color: var(--ink2); }
+  .step .c { width: 34px; height: 34px; margin: 0 auto 8px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; border: 1.5px solid var(--win-line); }
+  .step.done .c { background: var(--gold); color: #111; border-color: var(--gold); }
+  .step.now .c { border-color: var(--gold); color: var(--gold); box-shadow: 0 0 0 5px rgba(189,154,106,.18); }
+  .step.now { color: var(--ink); }
+  .line { height: 2px; flex: .6; background: var(--win-line); margin-bottom: 22px; }
+  .line.done { background: var(--gold); }
+  .log { background: #111112; border-radius: 10px; padding: 14px 16px; font-size: 12px; line-height: 1.75; color: #b9b4aa; height: 200px; }
+  .log b { color: #f3f2ee; font-weight: 500; }
+  .acts { display: flex; gap: 10px; margin-top: 18px; align-items: center; }
+
+  /* search (from C) */
+  .search { position: absolute; left: 50%; top: 140px; transform: translateX(calc(-50% - 120px)); width: 620px;
+            background: var(--glass); backdrop-filter: blur(30px); border: 1px solid var(--glass-line);
+            border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.3); z-index: 6; overflow: hidden; }
+  .search .q { display: flex; align-items: center; gap: 14px; padding: 16px 20px; font-size: 22px; font-weight: 300; border-bottom: 1px solid var(--glass-line); }
+  .search .q svg { width: 22px; height: 22px; stroke: var(--ink2); fill: none; stroke-width: 2; }
+  .caret { display: inline-block; width: 2px; height: 24px; background: var(--gold); vertical-align: -4px; margin-left: 1px; }
+  .res { padding: 8px; font-size: 14px; }
+  .res .hd { font-size: 11px; color: var(--ink2); letter-spacing: .1em; text-transform: uppercase; padding: 8px 12px 4px; }
+  .res .r { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; }
+  .res .r.on { background: rgba(189,154,106,.24); }
+  .res .r svg { width: 28px; height: 28px; }
+  .res .r .k { margin-left: auto; font-size: 12px; color: var(--ink2); }
+  .dim { position: absolute; inset: 0; background: rgba(0,0,0,.12); z-index: 5; }
+
+  /* settings */
+  .settings { left: 120px; top: 70px; width: 860px; height: 580px; display: flex; flex-direction: column; }
+  .settings .main { display: flex; flex: 1; min-height: 0; }
+  .side .ic { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; color: #fff; font-size: 12px; }
+  .pane { flex: 1; padding: 24px 30px; }
+  .pane h2 { font-size: 20px; font-weight: 600; margin-bottom: 18px; }
+  .themes { display: flex; gap: 16px; }
+  .th { flex: 1; text-align: center; font-size: 13px; }
+  .th .pv { height: 132px; border-radius: 12px; position: relative; overflow: hidden; border: 2px solid transparent; margin-bottom: 8px; }
+  .th.sel .pv { border-color: var(--gold); box-shadow: 0 0 0 4px rgba(189,154,106,.2); }
+  .th.sel { font-weight: 600; }
+  .pv .mb { position: absolute; top: 0; left: 0; right: 0; height: 9px; }
+  .pv .wd { position: absolute; right: 8px; width: 38px; border-radius: 5px; }
+  .pv .wn { position: absolute; left: 10px; top: 20px; width: 120px; height: 76px; border-radius: 6px; }
+  .pv .dk { position: absolute; bottom: 6px; left: 50%; transform: translateX(-50%); width: 92px; height: 14px; border-radius: 5px; }
+  .group { margin-top: 22px; background: var(--win-side); border: 1px solid var(--win-line); border-radius: 12px; font-size: 13px; }
+  .group .rw { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-bottom: 1px solid var(--win-line); }
+  .group .rw:last-child { border-bottom: 0; }
+  .tg { width: 36px; height: 21px; border-radius: 99px; background: var(--gold); position: relative; }
+  .tg::after { content: ''; position: absolute; right: 2px; top: 2px; width: 17px; height: 17px; border-radius: 50%; background: #fff; }
+  .tg.off { background: var(--chip); } .tg.off::after { right: auto; left: 2px; }
+  .sw { display: flex; gap: 8px; } .sw i { width: 18px; height: 18px; border-radius: 50%; display: block; }
+  .sw i.sel { box-shadow: 0 0 0 2px var(--win), 0 0 0 4px var(--ink2); }
+  .seg { display: flex; background: var(--chip); border-radius: 8px; padding: 2px; font-size: 12px; }
+  .seg span { padding: 4px 10px; border-radius: 6px; } .seg span.on { background: var(--win); box-shadow: 0 1px 3px rgba(0,0,0,.15); font-weight: 600; }
+</style></head>
+<body>
+<div class="glow"></div>
+<img class="wallseal" id="ws">
+<div id="mb"></div>
+<div id="stage"></div>
+<div class="widgets" id="wg"></div>
+<div id="dk"></div>
+<div class="caption" id="cap"></div>
+
+<script src="common.js"></script>
+<script>
+const p = new URLSearchParams(location.search);
+const theme = p.get('theme') || 'obsidian', view = p.get('view') || 'desk';
+const NAMES = { ivory: 'Ivory', obsidian: 'Obsidian', olive: 'Olive' };
+document.body.className = theme;
+const seal = theme === 'ivory' ? 'sigiliu-pe-fundal-deschis.svg' : 'sigiliu-pe-fundal-inchis.svg';
+ws.src = theme === 'ivory' ? 'sigiliu-pe-fundal-deschis.svg' : 'sigiliu-pe-fundal-inchis.svg';
+const L = '<div class="lights"><i></i><i></i><i></i></div>';
+
+const appName = { desk: 'ACM Studio', search: 'Desktop', settings: 'Setări' }[view];
+mb.outerHTML = menubar(appName, ['Fișier', 'Editare', 'Fereastră', 'Ajutor'], seal);
+dk.outerHTML = dock(view === 'settings' ? ['files', 'chrome', 'settings'] : ['files', 'chrome', 'code', 'studio']);
+
+wg.innerHTML = `
+  <div class="w"><div class="muted">Luni, 16 noiembrie</div><div class="big">21:41</div><div class="muted">Oradea · 4° senin</div></div>
+  <div class="w" style="display:flex;align-items:center;gap:14px">
+    <svg class="ring" viewBox="0 0 52 52"><circle class="bg" cx="26" cy="26" r="21" stroke-width="6" fill="none"/><circle cx="26" cy="26" r="21" stroke="#BD9A6A" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="99 200" transform="rotate(-90 26 26)"/></svg>
+    <div><div style="font-weight:600">Baterie 75%</div><div class="muted">Se încarcă · 38 min</div></div></div>
+  <div class="w"><div class="h">Proiecte <span class="muted" style="font-weight:400">3</span></div>
+    <div class="proj"><span class="dot"></span>Bubu &amp; Dudu<span class="s gold">build…</span></div>
+    <div class="proj"><span class="dot" style="background:#6f8f6a"></span>ISM Radio<span class="s muted">ieri</span></div>
+    <div class="proj"><span class="dot" style="background:#6b7fa8"></span>CarHub<span class="s muted">12 nov.</span></div></div>
+  <div class="w"><div class="h">Sistem</div>
+    <div class="kv muted">Pornire<span style="color:var(--ink)">9,8 s</span></div>
+    <div class="kv muted">Memorie<span style="color:var(--ink)">1,1 / 4 GB</span></div>
+    <div class="kv muted">ACM OS<span class="ok">1.0 · la zi</span></div></div>`;
+
+if (view === 'desk') {
+  stage.innerHTML = `<div class="window studio">
+    <div class="titlebar">${L}<div class="t">ACM Studio</div></div>
+    <div class="main">
+      <div class="side">
+        <div class="hd">Proiecte</div>
+        <div class="it on"><span class="dot"></span>Bubu &amp; Dudu</div>
+        <div class="it"><span class="dot" style="background:#6f8f6a"></span>ISM Radio</div>
+        <div class="it"><span class="dot" style="background:#6b7fa8"></span>CarHub</div>
+        <div class="hd" style="margin-top:22px">Conturi</div>
+        <div class="it">App Store Connect <span class="ok" style="margin-left:auto">●</span></div>
+        <div class="it">GitHub <span class="ok" style="margin-left:auto">●</span></div>
+      </div>
+      <div class="content">
+        <div class="muted" style="font-size:12px">Flutter · iOS + Android · ramura main</div>
+        <h2>Publică Bubu &amp; Dudu 1.4.0</h2>
+        <div class="pipe">
+          <div class="step done"><div class="c">✓</div>Cod trimis</div><div class="line done"></div>
+          <div class="step done"><div class="c">✓</div>Teste</div><div class="line done"></div>
+          <div class="step now"><div class="c">◐</div>Build iOS în cloud</div><div class="line"></div>
+          <div class="step"><div class="c">↑</div>TestFlight</div><div class="line"></div>
+          <div class="step"><div class="c">★</div>App Store</div>
+        </div>
+        <div class="log mono">
+          <b>▸ Mac în cloud</b> · Xcode 26<br>✓ flutter pub get<br>✓ pod install (42 pods)<br>
+          ✓ semnare cu cheia App Store Connect<br>▸ flutter build ipa --release …<br>
+          <span class="gold">  compilare Runner 71%</span>
+        </div>
+        <div class="acts"><span class="btn">Trimite în TestFlight când e gata</span><span class="btn ghost">Deschide în VS Code</span><span class="muted" style="font-size:12px;margin-left:auto">≈ 4 min rămase</span></div>
+      </div>
+    </div></div>`;
+}
+
+if (view === 'search') {
+  stage.innerHTML = `<div class="dim"></div><div class="search">
+    <div class="q"><svg viewBox="0 0 22 22"><circle cx="9.5" cy="9.5" r="6.5"/><path d="M14.5 14.5 20 20"/></svg><span>pub<span class="caret"></span></span></div>
+    <div class="res">
+      <div class="hd">Acțiuni</div>
+      <div class="r on">${ICONS.studio}<span>Publică proiectul curent pe iOS</span><span class="k">↵</span></div>
+      <div class="r">${ICONS.update}<span>Caută actualizări ACM OS</span><span class="k">⌘ ↵</span></div>
+      <div class="hd">Aplicații</div>
+      <div class="r">${ICONS.studio}<span>ACM Studio</span></div>
+      <div class="r">${ICONS.chrome}<span>Google Chrome</span></div>
+      <div class="hd">Fișiere</div>
+      <div class="r">${ICONS.files}<span>pubspec.yaml</span><span class="k">Bubu &amp; Dudu</span></div>
+    </div></div>`;
+}
+
+if (view === 'settings') {
+  const pv = (t, bg, ink, glass, gold) => `
+    <div class="th${t === theme ? ' sel' : ''}"><div class="pv" style="background:${bg}">
+      <div class="mb" style="background:${glass}"></div>
+      <div class="wn" style="background:${ink};opacity:.95"></div>
+      <div class="wd" style="top:20px;height:22px;background:${glass}"></div>
+      <div class="wd" style="top:46px;height:16px;background:${glass}"></div>
+      <div class="wd" style="top:66px;height:26px;background:${glass}"></div>
+      <div class="dk" style="background:${glass}"></div>
+      <div style="position:absolute;left:18px;top:30px;width:40px;height:5px;border-radius:3px;background:${gold}"></div>
+    </div>${NAMES[t]}</div>`;
+  const side = [['Wi-Fi', '#3b82f6', '◠'], ['Bluetooth', '#3b82f6', 'ᛒ'], ['Sunet', '#e5484d', '♪'], ['Baterie', '#4caf6a', '▮'],
+                ['Aspect', '#BD9A6A', '◐'], ['Widget-uri', '#6b7fa8', '▦'], ['Actualizări', '#8e8e93', '↻'], ['Despre', '#BD9A6A', 'A']];
+  stage.innerHTML = `<div class="window settings">
+    <div class="titlebar">${L}<div class="t">Setări</div></div>
+    <div class="main">
+      <div class="side">${side.map(([n, c, g]) => `<div class="it${n === 'Aspect' ? ' on' : ''}"><span class="ic" style="background:${c}">${g}</span>${n}</div>`).join('')}</div>
+      <div class="pane">
+        <h2>Aspect</h2>
+        <div class="themes">
+          ${pv('ivory', 'linear-gradient(135deg,#fbf8f2,#e2d8c8)', '#fbfaf7', 'rgba(255,255,255,.75)', '#BD9A6A')}
+          ${pv('obsidian', 'linear-gradient(135deg,#2a2620,#0b0b0c)', '#18181a', 'rgba(60,58,54,.8)', '#C9A574')}
+          ${pv('olive', 'linear-gradient(135deg,#3a3e33,#1d1f1a)', '#23251f', 'rgba(70,75,64,.75)', '#BD9A6A')}
+        </div>
+        <div class="group">
+          <div class="rw">Schimbă tema automat <div class="seg"><span>Niciodată</span><span class="on">Ivory ziua, Obsidian seara</span></div></div>
+          <div class="rw">Culoare accent <div class="sw"><i class="sel" style="background:#BD9A6A"></i><i style="background:#6f8f6a"></i><i style="background:#6b7fa8"></i><i style="background:#c46a5a"></i><i style="background:#8e8e93"></i></div></div>
+          <div class="rw">Widget-uri pe desktop <div class="tg"></div></div>
+          <div class="rw">Efect de sticlă pe bară și dock <div class="tg"></div></div>
+          <div class="rw">Animații <div class="seg"><span>Oprite</span><span class="on">Rapide</span><span>Line</span></div></div>
+        </div>
+      </div>
+    </div></div>`;
+}
+
+cap.textContent = `${NAMES[theme]} · ${{ desk: 'desktop cu widget-uri', search: 'căutare (Ctrl + Space)', settings: 'Setări → Aspect' }[view]}`;
+</script>
+</body></html>

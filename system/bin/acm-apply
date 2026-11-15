@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+# Aduce sistemul la starea descrisă de versiunea curentă din /opt/acm-os.
+# Se poate rula de oricâte ori: fiecare pas verifică întâi ce e deja făcut.
+set -uo pipefail
+source "$(dirname "$(readlink -f "$0")")/../lib/acm-common.sh"
+need_root
+
+SYS="$ACM_DIR/system"
+USER_NAME="$(main_user)"
+VERSION="$(cat "$ACM_DIR/VERSION")"
+export DEBIAN_FRONTEND=noninteractive
+mkdir -p "$ACM_STATE"
+
+say "ACM OS $VERSION — aplic configurația"
+
+# 1. Surse apt: contrib/non-free (driver Wi-Fi) + Google Chrome
+if [ -f /etc/apt/sources.list.d/debian.sources ]; then
+  enable_nonfree_deb822 < /etc/apt/sources.list.d/debian.sources > /tmp/acm.sources \
+    && cat /tmp/acm.sources > /etc/apt/sources.list.d/debian.sources
+fi
+if [ -s /etc/apt/sources.list ]; then
+  enable_nonfree_list < /etc/apt/sources.list > /tmp/acm.list && cat /tmp/acm.list > /etc/apt/sources.list
+fi
+if [ ! -f /usr/share/keyrings/google-chrome.gpg ]; then
+  curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
+fi
+echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] https://dl.google.com/linux/chrome/deb/ stable main" \
+  > /etc/apt/sources.list.d/google-chrome.list
+ok "surse apt"
+
+# 2. Pachete
+apt-get update -q
+mapfile -t PKGS < <(sed 's/#.*//' "$SYS/packages.txt" | tr -s ' \t' '\n' | grep -v '^$')
+apt-get install -y -q "${PKGS[@]}" "linux-headers-$(uname -r)" || warn "unele pachete nu s-au instalat (vezi mai sus)"
+ok "pachete"
+
+# 3. Fișierele ACM OS peste sistem
+cp -a "$SYS/files/." /
+ok "fișiere de sistem"
+
+# 4. Limbă, oră, tastatură
+sed -i 's/^# *ro_RO.UTF-8/ro_RO.UTF-8/' /etc/locale.gen && locale-gen >/dev/null
+update-locale LANG=ro_RO.UTF-8
+timedatectl set-timezone Europe/Bucharest 2>/dev/null || ln -sf /usr/share/zoneinfo/Europe/Bucharest /etc/localtime
+ok "română, ora României"
+
+# 5. Pornire rapidă: GRUB fără așteptare (Shift arată meniul), autologin în Plasma
+update-grub >/dev/null 2>&1 || true
+SESSION=plasma
+[ -f /usr/share/xsessions/plasmax11.desktop ] && SESSION=plasmax11
+if [ -n "$USER_NAME" ]; then
+  mkdir -p /etc/sddm.conf.d
+  printf '[Autologin]\nUser=%s\nSession=%s\nRelogin=false\n' "$USER_NAME" "$SESSION" > /etc/sddm.conf.d/acm-autologin.conf
+fi
+ok "pornire rapidă ($SESSION)"
+
+# 6. Servicii
+systemctl enable -q mbpfan 2>/dev/null || true
+for s in ModemManager.service cups-browsed.service; do systemctl disable -q --now "$s" 2>/dev/null || true; done
+systemctl enable -q acm-update-check.timer
+ok "servicii"
+
+# 7. Snapshot-uri (doar dacă discul e Btrfs)
+if [ "$(findmnt -no FSTYPE /)" = btrfs ]; then
+  [ -f /etc/snapper/configs/root ] || snapper -c root create-config /
+  snapper -c root set-config TIMELINE_CREATE=no NUMBER_LIMIT=10 >/dev/null
+  ok "snapshot-uri active"
+else
+  warn "discul nu e Btrfs: actualizările merg, dar fără anulare"
+fi
+
+# 8. Claude Code (pentru utilizatorul principal)
+if [ -n "$USER_NAME" ] && ! runuser -l "$USER_NAME" -c 'command -v claude >/dev/null && claude --version >/dev/null 2>&1'; then
+  say "instalez Claude Code"
+  runuser -l "$USER_NAME" -c 'curl -fsSL https://claude.ai/install.sh | bash' >/dev/null 2>&1
+  if runuser -l "$USER_NAME" -c '"$HOME/.local/bin/claude" --version' >/dev/null 2>&1; then
+    ok "Claude Code (nativ)"
+  else
+    # binarul nativ poate cere instrucțiuni pe care Core 2 Duo nu le are
+    npm install -g -q @anthropic-ai/claude-code >/dev/null 2>&1 && ok "Claude Code (npm)" || warn "Claude Code nu s-a instalat"
+  fi
+fi
+
+# 9. Comenzile ACM și versiunea
+ln -sf "$SYS/bin/acm-update" /usr/local/bin/acm-update
+ln -sf "$SYS/bin/acm-apply"  /usr/local/bin/acm-apply
+printf 'NAME="ACM OS"\nVERSION=%s\n' "$VERSION" > /etc/acm-release
+ok "ACM OS $VERSION aplicat"

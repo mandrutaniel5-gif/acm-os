@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Actualizări ACM OS.
+#   acm-update check     -> afișează versiunea nouă, dacă există (cod 0 = există, 1 = la zi)
+#   acm-update apply     -> snapshot, trece la ultima versiune, aplică, actualizează Debian și Chrome
+#   acm-update rollback  -> anulează ultima actualizare
+set -uo pipefail
+source "$(dirname "$(readlink -f "$0")")/../lib/acm-common.sh"
+
+latest() { git -C "$ACM_DIR" ls-remote --tags --refs origin 2>/dev/null | sed 's|.*refs/tags/||' | latest_tag_version; }
+
+cmd_check() {
+  local cur new
+  cur="$(installed_version)"; new="$(latest)"
+  mkdir -p "$ACM_STATE" 2>/dev/null
+  if [ -n "$new" ] && version_gt "$new" "${cur:-0}"; then
+    echo "$new" > "$ACM_STATE/available" 2>/dev/null
+    echo "ACM OS $new e disponibil (ai $cur)."; return 0
+  fi
+  rm -f "$ACM_STATE/available" 2>/dev/null
+  echo "ACM OS $cur e la zi."; return 1
+}
+
+snap() { [ "$(findmnt -no FSTYPE /)" = btrfs ] && [ -f /etc/snapper/configs/root ] && snapper -c root create "$@" --print-number; }
+
+cmd_apply() {
+  need_root
+  local cur new pre post
+  cur="$(installed_version)"; new="$(latest)"
+  if [ -z "$new" ] || ! version_gt "$new" "${cur:-0}"; then echo "ACM OS $cur e la zi."; return 0; fi
+
+  say "ACM OS $cur → $new"
+  pre="$(snap --type pre --cleanup-algorithm number --description "ACM OS $cur -> $new")" || pre=""
+  if git -C "$ACM_DIR" fetch -q --tags --force origin && git -C "$ACM_DIR" checkout -q "v$new" \
+     && "$ACM_DIR/system/bin/acm-apply"; then
+    apt-get -y -q full-upgrade
+    if [ -n "$pre" ]; then
+      post="$(snap --type post --pre-number "$pre" --cleanup-algorithm number --description "ACM OS $new")"
+      printf '%s %s\n' "$pre" "$post" > "$ACM_STATE/last-update"
+    fi
+    rm -f "$ACM_STATE/available"
+    ok "ACM OS $new instalat. Repornește când vrei."
+  else
+    warn "Actualizarea a eșuat."
+    [ -n "$pre" ] && warn "Poți reveni cu: sudo acm-update rollback"
+    if [ -n "$pre" ]; then
+      post="$(snap --type post --pre-number "$pre" --description "eșuat")"
+      printf '%s %s\n' "$pre" "$post" > "$ACM_STATE/last-update"
+    fi
+    return 1
+  fi
+}
+
+cmd_rollback() {
+  need_root
+  [ -f "$ACM_STATE/last-update" ] || { warn "Nu există o actualizare de anulat."; return 1; }
+  read -r pre post < "$ACM_STATE/last-update"
+  say "Anulez schimbările dintre snapshot-urile $pre și $post"
+  snapper -c root undochange "$pre..$post" && rm -f "$ACM_STATE/last-update" && ok "Gata. Repornește laptopul."
+}
+
+case "${1:-check}" in
+  check)    cmd_check ;;
+  apply)    cmd_apply ;;
+  rollback) cmd_rollback ;;
+  *) echo "folosire: acm-update [check|apply|rollback]"; exit 2 ;;
+esac

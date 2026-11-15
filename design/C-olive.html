@@ -1,0 +1,61 @@
+<!doctype html><html><head><meta charset="utf-8"><link rel="stylesheet" href="common.css">
+<style>
+  .center-seal { position: absolute; left: -160px; bottom: -200px; width: 640px; height: 640px; opacity: .14; }
+  .search { position: absolute; left: 50%; top: 150px; transform: translateX(-50%); width: 620px;
+            background: var(--glass); backdrop-filter: blur(30px); border: 1px solid var(--glass-line);
+            border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.4); z-index: 6; overflow: hidden; }
+  .search .q { display: flex; align-items: center; gap: 14px; padding: 16px 20px; font-size: 22px; font-weight: 300; border-bottom: 1px solid var(--glass-line); }
+  .search .q svg { width: 22px; height: 22px; stroke: var(--ink2); fill: none; stroke-width: 2; }
+  .caret { display: inline-block; width: 2px; height: 24px; background: var(--gold); vertical-align: -4px; margin-left: 1px; }
+  .res { padding: 8px; font-size: 14px; }
+  .res .h { font-size: 11px; color: var(--ink2); letter-spacing: .1em; text-transform: uppercase; padding: 8px 12px 4px; }
+  .res .r { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 10px; }
+  .res .r.on { background: rgba(189,154,106,.22); }
+  .res .r svg { width: 28px; height: 28px; }
+  .res .r .k { margin-left: auto; font-size: 12px; color: var(--ink2); }
+
+  .widgets { position: absolute; right: 26px; top: 52px; width: 230px; display: flex; flex-direction: column; gap: 12px; z-index: 4; }
+  .w { background: var(--glass); border: 1px solid var(--glass-line); border-radius: 16px; padding: 14px 16px; font-size: 13px; backdrop-filter: blur(24px); }
+  .w .big { font-size: 34px; font-weight: 300; letter-spacing: -.02em; }
+  .ring { width: 54px; height: 54px; }
+</style></head>
+<body class="olive">
+<img class="center-seal" src="sigiliu-pe-fundal-inchis.svg">
+<div id="mb"></div>
+
+<div class="widgets">
+  <div class="w"><div class="muted">Luni, 16 noiembrie</div><div class="big">21:41</div><div class="muted">Oradea · 4° senin</div></div>
+  <div class="w" style="display:flex;align-items:center;gap:14px">
+    <svg class="ring" viewBox="0 0 54 54"><circle cx="27" cy="27" r="22" stroke="rgba(255,255,255,.12)" stroke-width="6" fill="none"/><circle cx="27" cy="27" r="22" stroke="#BD9A6A" stroke-width="6" fill="none" stroke-linecap="round" stroke-dasharray="104 200" transform="rotate(-90 27 27)"/></svg>
+    <div><div style="font-weight:600">Baterie 75%</div><div class="muted">Se încarcă · 38 min</div></div>
+  </div>
+  <div class="w"><div style="font-weight:600;margin-bottom:6px">Sistem</div>
+    <div class="muted">Pornire: <span style="color:var(--ink)">9,8 s</span></div>
+    <div class="muted">Memorie: <span style="color:var(--ink)">1,1 / 4 GB</span></div>
+    <div class="muted">Actualizat: <span class="ok">la zi</span></div></div>
+</div>
+
+<div class="search">
+  <div class="q"><svg viewBox="0 0 22 22"><circle cx="9.5" cy="9.5" r="6.5"/><path d="M14.5 14.5 20 20"/></svg><span>pub<span class="caret"></span></span></div>
+  <div class="res">
+    <div class="h">Acțiuni</div>
+    <div class="r on" id="r1"></div>
+    <div class="r" id="r2"></div>
+    <div class="h">Aplicații</div>
+    <div class="r" id="r3"></div>
+    <div class="r" id="r4"></div>
+  </div>
+</div>
+
+<div id="dk"></div>
+<div class="caption">Varianta C · Olive — verdele ACM, totul pornește din căutare</div>
+<script src="common.js"></script>
+<script>
+  mb.outerHTML = menubar('Desktop', ['Fișier', 'Vizualizare', 'Ajutor'], 'sigiliu-pe-fundal-inchis.svg');
+  dk.outerHTML = dock(['files', 'chrome']);
+  r1.innerHTML = ICONS.studio + '<span>Publică proiectul curent pe iOS</span><span class="k">↵</span>';
+  r2.innerHTML = ICONS.update + '<span>Publică actualizare ACM OS</span><span class="k">⌘ ↵</span>';
+  r3.innerHTML = ICONS.studio + '<span>ACM Studio</span>';
+  r4.innerHTML = ICONS.chrome + '<span>Google Chrome</span>';
+</script>
+</body></html>
