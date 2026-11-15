@@ -29,7 +29,7 @@ check() { if eval "$2"; then echo "::notice::OK: $1"; else echo "::error::LIPSEÈ
 check "ISO generat"                 "ls ./*.iso >/dev/null 2>&1"
 check "ACM OS Ã®n /opt/acm-os"       "[ -f chroot/etc/acm-release ]"
 check "driver Wi-Fi wl compilat"    "ls chroot/lib/modules/*/updates/dkms/wl.ko* >/dev/null 2>&1"
-check "Google Chrome"               "[ -x chroot/usr/bin/google-chrome-stable ]"
+check "Google Chrome"               "[ -x chroot/opt/google/chrome/chrome ]"
 check "instalator Calamares"        "[ -x chroot/usr/bin/calamares ]"
 check "Plasma"                      "[ -x chroot/usr/bin/plasmashell ]"
 grep -h "nu s-a instalat" lb.log | sed "s/^/::warning::/" || true
