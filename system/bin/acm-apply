@@ -15,11 +15,11 @@ say "ACM OS $VERSION — aplic configurația"
 
 # 1. Surse apt: contrib/non-free (driver Wi-Fi) + Google Chrome
 if [ -f /etc/apt/sources.list.d/debian.sources ]; then
-  enable_nonfree_deb822 < /etc/apt/sources.list.d/debian.sources > /tmp/acm.sources \
-    && cat /tmp/acm.sources > /etc/apt/sources.list.d/debian.sources
+  tmp="$(mktemp)" && enable_nonfree_deb822 < /etc/apt/sources.list.d/debian.sources > "$tmp" \
+    && cat "$tmp" > /etc/apt/sources.list.d/debian.sources; rm -f "$tmp"
 fi
 if [ -s /etc/apt/sources.list ]; then
-  enable_nonfree_list < /etc/apt/sources.list > /tmp/acm.list && cat /tmp/acm.list > /etc/apt/sources.list
+  tmp="$(mktemp)" && enable_nonfree_list < /etc/apt/sources.list > "$tmp" && cat "$tmp" > /etc/apt/sources.list; rm -f "$tmp"
 fi
 if [ ! -f /usr/share/keyrings/google-chrome.gpg ]; then
   curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg
