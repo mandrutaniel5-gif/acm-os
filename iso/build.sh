@@ -21,6 +21,21 @@ lb config \
 
 cp -r "$src/iso/config/." config/
 chmod +x config/hooks/normal/*.hook.chroot
-lb build
+lb build 2>&1 | tee lb.log
+
+# Verificări. Liniile ::notice::/::error:: devin adnotări vizibile pe pagina build-ului.
+fail=0
+check() { if eval "$2"; then echo "::notice::OK: $1"; else echo "::error::LIPSEȘTE: $1"; fail=1; fi; }
+check "ISO generat"                 "ls ./*.iso >/dev/null 2>&1"
+check "ACM OS în /opt/acm-os"       "[ -f chroot/etc/acm-release ]"
+check "driver Wi-Fi wl compilat"    "ls chroot/lib/modules/*/updates/dkms/wl.ko* >/dev/null 2>&1"
+check "Google Chrome"               "[ -x chroot/usr/bin/google-chrome-stable ]"
+check "instalator Calamares"        "[ -x chroot/usr/bin/calamares ]"
+check "Plasma"                      "[ -x chroot/usr/bin/plasmashell ]"
+grep -h "nu s-a instalat" lb.log | sed "s/^/::warning::/" || true
+[ "$fail" = 0 ] || exit 1
+
 mkdir -p "$src/out" && mv ./*.iso "$src/out/"
-ls -la "$src/out"
+echo "::notice::ISO: $(ls "$src/out") — $(du -h "$src"/out/*.iso | cut -f1)"
+# containerul rulează ca root; pașii următori din GitHub rulează ca alt utilizator
+chmod -R a+rwX "$src/out"
