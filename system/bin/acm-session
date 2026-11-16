@@ -19,6 +19,8 @@ if command -v kwriteconfig6 >/dev/null; then
   kwriteconfig6 --file kwalletrc --group Wallet --key Enabled false
   kwriteconfig6 --file kwalletrc --group Wallet --key "First Use" false
   kwriteconfig6 --file plasma-nm --group General --key SystemConnectionsByDefault true
+  # pornire curată, fără aplicațiile de data trecută
+  kwriteconfig6 --file ksmserverrc --group General --key loginMode emptySession
 fi
 
 # widget-urile în dreapta, după ecranul real (o dată; din nou din Setări → Aspect dacă e nevoie)
@@ -28,7 +30,7 @@ if [ ! -f "$cfg/widgets-placed" ]; then
 fi
 
 # ACM Docs și ACM Contabil în dock-ul existent, o dată, după ce s-au instalat
-if [ ! -f "$cfg/dock-aplicatii" ] && [ -f /usr/share/applications/acm-docs.desktop ]; then
+if [ ! -f "$cfg/dock-aplicatii-2" ] && [ -f /usr/share/applications/acm-docs.desktop ]; then
   ( sleep 30; /opt/acm-os/system/bin/acm-theme dock >/dev/null 2>&1 ) &
 fi
 

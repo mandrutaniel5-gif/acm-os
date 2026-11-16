@@ -1,0 +1,3 @@
+[General]
+# pornire curată: nu redeschide aplicațiile de data trecută
+loginMode=emptySession
