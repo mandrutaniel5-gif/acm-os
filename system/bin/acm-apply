@@ -99,25 +99,30 @@ else
 fi
 
 # 8. Claude Code (pentru utilizatorul principal)
-# Se instalează o singură dată. Binarul nativ poate cere instrucțiuni pe care Core 2 Duo nu le are:
-# atunci e dat la o parte (altfel, fiind primul în PATH, verificarea pica și reinstala la fiecare actualizare).
+# Claude Code nativ (și pachetul npm de la 2.1.113 încolo) cere instrucțiuni AVX2, pe care Core 2 Duo
+# nu le are („instrucțiune ilegală”). Pe procesoare fără AVX2 rămâne ultima versiune JavaScript,
+# care rulează pe Node, fără actualizare automată (altfel ar trece singură pe varianta nativă).
+CLAUDE_JS=2.1.112
 claude_ok() { runuser -l "$USER_NAME" -c 'claude --version' >/dev/null 2>&1; }
-native_aside() {
-  local h; h="$(getent passwd "$USER_NAME" | cut -d: -f6)"
-  if [ -e "$h/.local/bin/claude" ] && ! runuser -l "$USER_NAME" -c '"$HOME/.local/bin/claude" --version' >/dev/null 2>&1; then
-    mv -f "$h/.local/bin/claude" "$h/.local/bin/claude.nu-merge-pe-acest-procesor"
+if [ -n "$USER_NAME" ]; then
+  if grep -qw avx2 /proc/cpuinfo; then
+    if ! claude_ok && [ ! -f "$ACM_STATE/claude-incercat" ]; then
+      say "instalez Claude Code (o singură dată)"
+      runuser -l "$USER_NAME" -c 'curl -fsSL https://claude.ai/install.sh | bash' >/dev/null 2>&1
+      touch "$ACM_STATE/claude-incercat"
+    fi
+  else
+    # binarul nativ din casa utilizatorului e mutat de utilizator însuși (nu de root)
+    runuser -l "$USER_NAME" -c '[ -e "$HOME/.local/bin/claude" ] && ! "$HOME/.local/bin/claude" --version >/dev/null 2>&1 &&
+      mv -f "$HOME/.local/bin/claude" "$HOME/.local/bin/claude.nu-merge-pe-acest-procesor"' >/dev/null 2>&1 || true
+    if [ "$(npm ls -g --depth=0 @anthropic-ai/claude-code 2>/dev/null | grep -o '@[0-9.]*$')" != "@$CLAUDE_JS" ]; then
+      say "instalez Claude Code $CLAUDE_JS (varianta pentru procesoare mai vechi)"
+      npm install -g -q "@anthropic-ai/claude-code@$CLAUDE_JS" >/dev/null 2>&1 || warn "Claude Code nu s-a instalat (internet?)"
+    fi
+    mkdir -p /etc/claude-code
+    [ -f /etc/claude-code/managed-settings.json ] || printf '{\n  "env": { "DISABLE_AUTOUPDATER": "1" }\n}\n' > /etc/claude-code/managed-settings.json
   fi
-}
-if [ -n "$USER_NAME" ] && ! claude_ok; then
-  native_aside
-  if ! claude_ok && [ ! -f "$ACM_STATE/claude-incercat" ]; then
-    say "instalez Claude Code (o singură dată)"
-    runuser -l "$USER_NAME" -c 'curl -fsSL https://claude.ai/install.sh | bash' >/dev/null 2>&1
-    native_aside
-    claude_ok || npm install -g -q @anthropic-ai/claude-code >/dev/null 2>&1
-    touch "$ACM_STATE/claude-incercat"
-  fi
-  if claude_ok; then ok "Claude Code"; else warn "Claude Code nu pornește pe acest procesor; nu mai reîncerc la fiecare actualizare"; fi
+  if claude_ok; then ok "Claude Code"; else warn "Claude Code nu pornește încă"; fi
 fi
 
 # 9. Aspectul ACM: ecran de pornire, numele sistemului
