@@ -1,0 +1,12 @@
+# Pachete puse pe stick (în pool-ul ISO-ului): instalatorul Calamares instalează GRUB din ele,
+# fără internet. Ca la imaginile live oficiale Debian.
+grub-common
+grub2-common
+grub-pc
+grub-pc-bin
+grub-efi-amd64
+grub-efi-amd64-bin
+grub-efi-amd64-signed
+shim-signed
+efibootmgr
+os-prober

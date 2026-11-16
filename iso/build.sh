@@ -31,6 +31,7 @@ check "ACM OS în /opt/acm-os"       "[ -f chroot/etc/acm-release ]"
 check "driver Wi-Fi wl compilat"    "ls chroot/lib/modules/*/updates/dkms/wl.ko* >/dev/null 2>&1"
 check "Google Chrome"               "[ -x chroot/opt/google/chrome/chrome ]"
 check "instalator Calamares"        "[ -x chroot/usr/bin/calamares ]"
+check "GRUB pe stick (pool)"        "ls binary/pool/main/g/grub2/grub-pc_*.deb binary/pool/main/g/grub2/grub-efi-amd64_*.deb >/dev/null 2>&1"
 check "Plasma"                      "[ -x chroot/usr/bin/plasmashell ]"
 grep -h "nu s-a instalat" lb.log | sed "s/^/::warning::/" || true
 [ "$fail" = 0 ] || exit 1
