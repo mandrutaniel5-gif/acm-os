@@ -129,6 +129,17 @@ fi
 [ "$IMAGE" = 1 ] || "$SYS/bin/acm-aplicatii" || warn "aplicațiile ACM se vor instala la următoarea actualizare"
 
 # 9. Aspectul ACM: ecran de pornire, numele sistemului
+# imaginea de pornire: doar driverele acestui laptop, compresie lz4 (se despachetează de câteva ori mai repede),
+# fără căutarea partiției de hibernare. Nu și pe stick: acolo trebuie să pornească pe orice calculator.
+if [ "$IMAGE" != 1 ] && command -v lz4 >/dev/null; then
+  want=$'MODULES=dep\nCOMPRESS=lz4\nRESUME=none'
+  if [ "$(cat /etc/initramfs-tools/conf.d/acm.conf 2>/dev/null)" != "$want" ]; then
+    echo "$want" > /etc/initramfs-tools/conf.d/acm.conf
+    update-initramfs -u >/dev/null 2>&1 && ok "imagine de pornire mai mică"
+  fi
+fi
+# fwupd caută firmware nou la fiecare pornire: un Mac din 2010 nu mai primește
+systemctl mask -q fwupd-refresh.timer fwupd-refresh.service 2>/dev/null || true
 if command -v plymouth-set-default-theme >/dev/null && [ "$(plymouth-set-default-theme)" != acm ]; then
   plymouth-set-default-theme acm && update-initramfs -u >/dev/null 2>&1
 fi

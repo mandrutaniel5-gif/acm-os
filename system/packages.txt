@@ -33,6 +33,7 @@ curl
 ca-certificates
 systemd-timesyncd           # ora corectă (fără ea, certificatele HTTPS par nevalide)
 gpg
+lz4                          # imaginea de pornire se despachetează repede
 unzip                        # aplicațiile ACM (motorul Electron)
 xz-utils
 btrfs-progs
