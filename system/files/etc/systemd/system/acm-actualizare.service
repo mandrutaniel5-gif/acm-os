@@ -1,0 +1,9 @@
+[Unit]
+Description=ACM OS: instalează actualizarea (pornit din Setări)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '/opt/acm-os/system/bin/acm-update apply > /var/log/acm-update.log 2>&1'
+TimeoutStartSec=1h

@@ -1,0 +1,9 @@
+[Unit]
+Description=ACM OS: revine la versiunea de dinainte (pornit din Setări)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c '/opt/acm-os/system/bin/acm-update rollback > /var/log/acm-update.log 2>&1'
+TimeoutStartSec=1h

@@ -88,7 +88,7 @@ case "${1:-}" in
   bt) bt ;;
   bt-on)  rfkill unblock bluetooth 2>/dev/null; bluetoothctl power on >/dev/null ;;
   bt-off) bluetoothctl power off >/dev/null ;;
-  bt-scan) bluetoothctl --timeout 10 scan on >/dev/null 2>&1; bt ;;
+  bt-scan) rfkill unblock bluetooth 2>/dev/null; bluetoothctl power on >/dev/null 2>&1; bluetoothctl --timeout 10 scan on >/dev/null 2>&1; bt ;;
   bt-pair)
     bluetoothctl --timeout 20 pair "${2:-}" >/dev/null 2>&1
     bluetoothctl trust "${2:-}" >/dev/null 2>&1

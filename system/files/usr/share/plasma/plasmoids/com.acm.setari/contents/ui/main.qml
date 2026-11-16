@@ -37,21 +37,25 @@ PlasmoidItem {
     property bool btBusy: false
     property bool updBusy: false
     property string updLine: ""
-    // actualizare prin pkexec (regula polkit ACM: fără parolă pentru utilizatorul principal); progresul vine din jurnal
+    // actualizarea rulează ca serviciu de sistem (acm-actualizare / acm-revenire), pornit fără parolă prin regula
+    // polkit ACM; continuă și dacă Setările se închid. Progresul vine din /var/log/acm-update.log.
     function updRun(what) {
         if (updBusy) return;
         updBusy = true; updLine = "Pornesc…";
-        run("pkexec /opt/acm-os/system/bin/acm-update " + what + " > $HOME/.cache/acm/update.log 2>&1; echo \"cod=$?\"", function (o) {
+        run("systemctl start " + (what === "apply" ? "acm-actualizare" : "acm-revenire") + ".service; echo \"cod=$?\"; "
+            + "grep -v '^ *$' /var/log/acm-update.log | tr -d '\\033' | tail -n 4", function (o) {
             root.updBusy = false;
-            root.updLine = o.indexOf("cod=0") >= 0
+            var ok = o.indexOf("cod=0") >= 0;
+            var detail = o.split("\n").filter(function (l) { return l.indexOf("cod=") !== 0 && l.trim() !== "" }).join("\n");
+            root.updLine = ok
                 ? (what === "apply" ? "ACM OS e la zi. Repornește laptopul când vrei." : "Am revenit la versiunea de dinainte. Repornește laptopul.")
-                : "Nu a mers. Încearcă din nou cu internetul pornit.";
+                : "Nu a mers. Motivul:\n" + (detail || o.trim());
             root.loadUpd();
         })
     }
     Timer {
         interval: 1500; repeat: true; running: root.updBusy
-        onTriggered: root.run("tail -n 40 $HOME/.cache/acm/update.log 2>/dev/null | tr '\\r' '\\n' | grep -v '^\\s*$' | sed 's/\\x1b\\[[0-9;]*m//g' | tail -n 1",
+        onTriggered: root.run("tail -n 40 /var/log/acm-update.log 2>/dev/null | tr '\\r' '\\n' | grep -v '^\\s*$' | sed 's/\\x1b\\[[0-9;]*m//g' | tail -n 1",
                               function (o) { if (root.updBusy && o.trim() !== "") root.updLine = o.trim() })
     }
     property bool confirmDoctor: false
@@ -148,8 +152,8 @@ PlasmoidItem {
         loadBat();
     }
     Timer { interval: 4000; repeat: true; running: true; onTriggered: root.loadBat() }
-    Timer { interval: 8000; repeat: true; running: root.page === "wifi" && root.pickSsid === ""; onTriggered: root.loadWifi() }
-    Timer { interval: 5000; repeat: true; running: root.page === "bluetooth" && !root.btBusy; onTriggered: root.loadBt() }
+    Timer { interval: 8000; repeat: true; triggeredOnStart: true; running: root.page === "wifi" && root.pickSsid === ""; onTriggered: root.loadWifi() }
+    Timer { interval: 5000; repeat: true; triggeredOnStart: true; running: root.page === "bluetooth" && !root.btBusy; onTriggered: root.loadBt() }
 
     // ---------- piese comune ----------
     component Lbl: Text { color: root.ink; font.pixelSize: 14; wrapMode: Text.WordWrap }
@@ -310,14 +314,14 @@ PlasmoidItem {
                             label: "Wi-Fi"; last: true
                             hint: root.wifi.state === "enabled" ? "Parolele rețelelor se salvează în sistem: nu ți se mai cer la pornire." : ""
                             Segmented {
-                                options: ["Oprit", "Pornit"]; current: root.wifi.state === "enabled" ? 1 : 0
+                                options: ["Oprit", "Pornit"]; current: root.wifi.state === "disabled" ? 0 : 1
                                 onPicked: (i) => root.run(root.bin + "acm-ctl wifi-" + (i ? "on" : "off"), root.loadWifi)
                             }
                         }
                     }
                     Lbl { visible: root.wifiMsg !== ""; text: root.wifiMsg; color: root.accent; Layout.fillWidth: true }
                     Box {
-                        visible: root.wifi.state === "enabled"
+                        visible: root.wifi.state !== "disabled"
                         Repeater {
                             model: root.wifi.nets
                             delegate: ColumnLayout {
@@ -373,7 +377,7 @@ PlasmoidItem {
                         }
                     }
                     Box {
-                        visible: root.bt.state === "yes"
+                        visible: root.bt.state !== "absent"
                         Repeater {
                             model: root.bt.devs
                             delegate: Setting {

@@ -18,3 +18,13 @@ polkit.addRule(function (action, subject) {
     return polkit.Result.YES;
   }
 });
+
+// Butonul „Actualizează acum” din Setări pornește doar aceste două servicii (fără parolă, fără terminal).
+polkit.addRule(function (action, subject) {
+  if (action.id == "org.freedesktop.systemd1.manage-units" &&
+      (action.lookup("unit") == "acm-actualizare.service" || action.lookup("unit") == "acm-revenire.service") &&
+      action.lookup("verb") == "start" &&
+      subject.local && subject.active && subject.isInGroup("sudo")) {
+    return polkit.Result.YES;
+  }
+});

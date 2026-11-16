@@ -76,7 +76,10 @@ ok "pornire rapidă ($SESSION)"
 # 6. Servicii
 systemctl enable -q mbpfan 2>/dev/null || true
 for s in ModemManager.service cups-browsed.service; do systemctl disable -q --now "$s" 2>/dev/null || true; done
+systemctl daemon-reload 2>/dev/null || true
 systemctl enable -q acm-update-check.timer acm-firstboot.service
+# Bluetooth pornit de la început, ca pe Mac (Debian îl lasă oprit)
+[ -f /etc/bluetooth/main.conf ] && sed -i -E 's/^#?AutoEnable=.*/AutoEnable=true/' /etc/bluetooth/main.conf
 # pornire rapidă: nimic nu așteaptă rețeaua; preload ține pregătite aplicațiile folosite des
 systemctl disable -q NetworkManager-wait-online.service 2>/dev/null || true
 systemctl enable -q preload 2>/dev/null || true
