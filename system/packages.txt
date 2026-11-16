@@ -30,6 +30,8 @@ fonts-jetbrains-mono
 # --- sistem ---
 git
 curl
+ca-certificates
+systemd-timesyncd           # ora corectă (fără ea, certificatele HTTPS par nevalide)
 gpg
 btrfs-progs
 snapper
