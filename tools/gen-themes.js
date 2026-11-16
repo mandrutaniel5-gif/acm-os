@@ -113,7 +113,8 @@ pad.writeConfig("icon", "acm-launchpad");
 var tasks = dock.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", ["applications:org.kde.dolphin.desktop", "applications:google-chrome.desktop",
-  "applications:org.kde.konsole.desktop", "applications:acm-claude.desktop", "applications:org.kde.gwenview.desktop",
+  "applications:org.kde.konsole.desktop", "applications:acm-claude.desktop", "applications:acm-docs.desktop",
+  "applications:acm-contabil.desktop", "applications:org.kde.gwenview.desktop",
   "applications:acm-actualizari.desktop", "applications:org.kde.plasmawindowed.desktop"]);
 tasks.writeConfig("showOnlyCurrentDesktop", "false");
 dock.addWidget("org.kde.plasma.marginsseparator");

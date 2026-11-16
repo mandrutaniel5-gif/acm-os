@@ -27,6 +27,11 @@ if [ ! -f "$cfg/widgets-placed" ]; then
     sleep 25; /opt/acm-os/system/bin/acm-theme widgets >/dev/null 2>&1 ) &
 fi
 
+# ACM Docs și ACM Contabil în dock-ul existent, o dată, după ce s-au instalat
+if [ ! -f "$cfg/dock-aplicatii" ] && [ -f /usr/share/applications/acm-docs.desktop ]; then
+  ( sleep 30; /opt/acm-os/system/bin/acm-theme dock >/dev/null 2>&1 ) &
+fi
+
 # programe KDE care pornesc la fiecare intrare și nu ne trebuie (pornire mai rapidă pe Core 2 Duo)
 mkdir -p "$HOME/.config/autostart"
 for a in org.kde.xwaylandvideobridge org.kde.discover.notifier org.kde.kdeconnect.daemon baloo_file \

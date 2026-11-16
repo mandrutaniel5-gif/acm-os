@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+# Aplicațiile ACM (ACM Docs, ACM Contabil) pe ACM OS. Sunt aplicații Electron: interfața lor (app.asar)
+# vine din ramura publică „aplicatii”, motorul Linux (Electron, de pe GitHub-ul Electron) se descarcă
+# o singură dată pentru fiecare versiune. Se instalează doar ce s-a schimbat.
+#   acm-aplicatii          instalează / actualizează
+set -uo pipefail
+source "$(dirname "$(readlink -f "$0")")/../lib/acm-common.sh"
+need_root
+
+RAW="https://raw.githubusercontent.com/mandrutaniel5-gif/acm-os/aplicatii"
+DEST=/opt/acm-apps
+mkdir -p "$DEST/.electron"
+list="$(curl -fsSL "$RAW/aplicatii.txt" | tr -d '\r')" || { warn "nu pot citi lista aplicațiilor ACM"; exit 1; }
+
+used=""
+while IFS='|' read -r id name ver el cats desc; do
+  [ -z "$id" ] || [ "${id#\#}" != "$id" ] && continue
+  used="$used $el"
+  [ "$(cat "$DEST/$id/.versiune" 2>/dev/null)" = "$ver|$el" ] && { ok "$name $ver"; continue; }
+  say "instalez $name $ver"
+
+  # motorul (Electron pentru Linux), păstrat o dată pentru toate aplicațiile cu aceeași versiune
+  ez="$DEST/.electron/$el"
+  if [ ! -x "$ez/electron" ]; then
+    tmp="$(mktemp -d)"
+    if curl -fsSL -o "$tmp/e.zip" "https://github.com/electron/electron/releases/download/v$el/electron-v$el-linux-x64.zip" \
+       && mkdir -p "$tmp/e" && unzip -q "$tmp/e.zip" -d "$tmp/e"; then
+      rm -rf "$ez" && mv "$tmp/e" "$ez"
+    else
+      warn "nu am putut descărca motorul pentru $name"; rm -rf "$tmp"; continue
+    fi
+    rm -rf "$tmp"
+  fi
+
+  # aplicația: copie cu legături fizice (nu ocupă spațiu de două ori) + interfața ei
+  new="$DEST/.$id.nou"; rm -rf "$new"
+  cp -al "$ez" "$new"
+  rm -f "$new/resources/default_app.asar"
+  if ! curl -fsSL -o "$new/resources/app.asar" "$RAW/$id/app.asar"; then
+    warn "nu am putut descărca $name"; rm -rf "$new"; continue
+  fi
+  if curl -fsSL -o "$new/unpacked.tar.xz" "$RAW/$id/app.asar.unpacked.tar.xz" 2>/dev/null; then
+    tar -xJf "$new/unpacked.tar.xz" -C "$new/resources" && rm -f "$new/unpacked.tar.xz"
+  fi
+  curl -fsSL -o "$new/icon.svg" "$RAW/$id/icon.svg" || true
+  chown root:root "$new/chrome-sandbox" && chmod 4755 "$new/chrome-sandbox"
+  echo "$ver|$el" > "$new/.versiune"
+  rm -rf "${DEST:?}/$id" && mv "$new" "$DEST/$id"
+
+  # GeForce 320M: fără accelerare grafică (ca la Chrome), altfel fereastra poate îngheța
+  cat > "/usr/share/applications/$id.desktop" <<EOF
+[Desktop Entry]
+Type=Application
+Name=$name
+Comment=$desc
+Exec=$DEST/$id/electron --disable-gpu %U
+Icon=$DEST/$id/icon.svg
+Categories=$cats
+StartupWMClass=$id
+EOF
+  ok "$name $ver"
+done <<< "$list"
+
+# motoarele pe care nu le mai folosește nicio aplicație
+for d in "$DEST"/.electron/*/; do
+  [ -d "$d" ] || continue
+  v="$(basename "$d")"
+  case " $used " in *" $v "*) ;; *) rm -rf "$d" ;; esac
+done
+update-desktop-database -q /usr/share/applications 2>/dev/null || true

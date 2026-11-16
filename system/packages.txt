@@ -33,6 +33,8 @@ curl
 ca-certificates
 systemd-timesyncd           # ora corectă (fără ea, certificatele HTTPS par nevalide)
 gpg
+unzip                        # aplicațiile ACM (motorul Electron)
+xz-utils
 btrfs-progs
 snapper
 systemd-zram-generator

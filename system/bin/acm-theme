@@ -45,7 +45,24 @@ d.addWidget("com.acm.widgets", g.width - w - 20, 48, w, h);'
   busctl --user call org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell evaluateScript s "$js" >/dev/null 2>&1
 }
 
+# Aplicațiile ACM se adaugă în dock-ul existent (după cele deja fixate), fără refacerea desktopului.
+dock_apps() {
+  local js='var ps = panels();
+for (var i = 0; i < ps.length; i++) {
+  var ws = ps[i].widgets("org.kde.plasma.icontasks");
+  for (var j = 0; j < ws.length; j++) {
+    var w = ws[j]; w.currentConfigGroup = ["General"];
+    var l = String(w.readConfig("launchers", ""));
+    var add = ["applications:acm-docs.desktop", "applications:acm-contabil.desktop"];
+    for (var k = 0; k < add.length; k++) if (l.indexOf(add[k]) < 0) l = l + (l ? "," : "") + add[k];
+    w.writeConfig("launchers", l);
+  }
+}'
+  busctl --user call org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell evaluateScript s "$js" >/dev/null 2>&1
+}
+
 case "${1:-}" in
+  dock) dock_apps && touch "$cfg/dock-aplicatii" && echo "Aplicațiile ACM sunt în dock." ;;
   widgets) place_widgets && touch "$cfg/widgets-placed" && echo "Widget-urile sunt în dreapta." ;;
   accent)
     [[ "${2:-}" =~ ^#[0-9A-Fa-f]{6}$ ]] || { echo "folosire: acm-theme accent '#RRGGBB'"; exit 2; }

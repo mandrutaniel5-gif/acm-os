@@ -125,6 +125,9 @@ if [ -n "$USER_NAME" ]; then
   if claude_ok; then ok "Claude Code"; else warn "Claude Code nu pornește încă"; fi
 fi
 
+# 8b. Aplicațiile ACM (ACM Docs, ACM Contabil)
+[ "$IMAGE" = 1 ] || "$SYS/bin/acm-aplicatii" || warn "aplicațiile ACM se vor instala la următoarea actualizare"
+
 # 9. Aspectul ACM: ecran de pornire, numele sistemului
 if command -v plymouth-set-default-theme >/dev/null && [ "$(plymouth-set-default-theme)" != acm ]; then
   plymouth-set-default-theme acm && update-initramfs -u >/dev/null 2>&1
@@ -227,6 +230,6 @@ fi
 # 10. Comenzile ACM și versiunea
 ln -sf "$SYS/bin/acm-update" /usr/local/bin/acm-update
 ln -sf "$SYS/bin/acm-apply"  /usr/local/bin/acm-apply
-for c in acm-theme acm-battery acm-setari acm-ctl acm-apps acm-prio; do ln -sf "$SYS/bin/$c" "/usr/local/bin/$c"; done
+for c in acm-theme acm-battery acm-setari acm-ctl acm-apps acm-prio acm-aplicatii; do ln -sf "$SYS/bin/$c" "/usr/local/bin/$c"; done
 printf 'NAME="ACM OS"\nVERSION=%s\n' "$VERSION" > /etc/acm-release
 ok "ACM OS $VERSION aplicat"
