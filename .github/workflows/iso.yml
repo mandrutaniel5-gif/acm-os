@@ -1,7 +1,7 @@
 name: ISO ACM OS
 on:
   push:
-    tags: ['v*']
+    tags: ['iso-*']   # ISO doar la cerere: git tag iso-X.Y.Z; actualizările v* nu construiesc ISO
   workflow_dispatch:
 permissions:
   contents: write
