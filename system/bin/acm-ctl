@@ -67,6 +67,24 @@ case "${1:-}" in
     fi
     if [ $? -eq 0 ]; then echo "ok=1"; else echo "ok=0"; echo "error=$(tr '\n' ' ' <<<"$out" | cut -c1-160)"; fi ;;
   wifi-forget) nmcli connection delete id "${2:-}" >/dev/null 2>&1; echo "ok=1" ;;
+  wifi-keep)
+    # Parolele rețelelor salvate trec în sistem (fără portofel), ca să nu mai fie cerute la pornire.
+    # Doar rețelele comune sau ale utilizatorului dat; nmcli -g scrie „user\:nume”, de aici sed-ul.
+    me="${2:-$(id -un)}"
+    nmcli -t -f NAME,TYPE connection show 2>/dev/null | sed -n 's/:802-11-wireless$//p' | sed 's/\\:/:/g' |
+      while IFS= read -r c; do
+        perm="$(nmcli -g connection.permissions connection show id "$c" 2>/dev/null | sed 's/\\//g')"
+        case "$perm" in ""|"user:$me") ;; *) continue ;; esac
+        flags="$(nmcli -g 802-11-wireless-security.psk-flags connection show id "$c" 2>/dev/null)"
+        psk="$(nmcli -s -g 802-11-wireless-security.psk connection show id "$c" 2>/dev/null | sed 's/\\\(.\)/\1/g')"
+        if [ -n "$psk" ]; then
+          nmcli connection modify id "$c" 802-11-wireless-security.psk-flags 0 802-11-wireless-security.psk "$psk" >/dev/null 2>&1
+          echo "salvat=$c"
+        elif [ "${flags%% *}" != 0 ]; then
+          nmcli connection modify id "$c" 802-11-wireless-security.psk-flags 0 >/dev/null 2>&1
+          echo "pregatit=$c"
+        fi
+      done ;;
   bt) bt ;;
   bt-on)  rfkill unblock bluetooth 2>/dev/null; bluetoothctl power on >/dev/null ;;
   bt-off) bluetoothctl power off >/dev/null ;;

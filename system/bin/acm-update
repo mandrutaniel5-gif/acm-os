@@ -33,7 +33,7 @@ cmd_apply() {
   pre="$(snap --type pre --cleanup-algorithm number --description "ACM OS $cur -> $new")" || pre=""
   if git -C "$ACM_DIR" fetch -q --tags --force origin && git -C "$ACM_DIR" checkout -q "v$new" \
      && "$ACM_DIR/system/bin/acm-apply"; then
-    apt-get -y -q full-upgrade
+    DEBIAN_FRONTEND=noninteractive apt-get -y -q -o Dpkg::Options::=--force-confdef -o Dpkg::Options::=--force-confold full-upgrade
     if [ -n "$pre" ]; then
       post="$(snap --type post --pre-number "$pre" --cleanup-algorithm number --description "ACM OS $new")"
       printf '%s %s\n' "$pre" "$post" > "$ACM_STATE/last-update"

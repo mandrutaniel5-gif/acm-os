@@ -35,6 +35,25 @@ PlasmoidItem {
     property string pickSsid: ""
     property string wifiMsg: ""
     property bool btBusy: false
+    property bool updBusy: false
+    property string updLine: ""
+    // actualizare prin pkexec (regula polkit ACM: fără parolă pentru utilizatorul principal); progresul vine din jurnal
+    function updRun(what) {
+        if (updBusy) return;
+        updBusy = true; updLine = "Pornesc…";
+        run("pkexec /opt/acm-os/system/bin/acm-update " + what + " > $HOME/.cache/acm/update.log 2>&1; echo \"cod=$?\"", function (o) {
+            root.updBusy = false;
+            root.updLine = o.indexOf("cod=0") >= 0
+                ? (what === "apply" ? "ACM OS e la zi. Repornește laptopul când vrei." : "Am revenit la versiunea de dinainte. Repornește laptopul.")
+                : "Nu a mers. Încearcă din nou cu internetul pornit.";
+            root.loadUpd();
+        })
+    }
+    Timer {
+        interval: 1500; repeat: true; running: root.updBusy
+        onTriggered: root.run("tail -n 40 $HOME/.cache/acm/update.log 2>/dev/null | tr '\\r' '\\n' | grep -v '^\\s*$' | sed 's/\\x1b\\[[0-9;]*m//g' | tail -n 1",
+                              function (o) { if (root.updBusy && o.trim() !== "") root.updLine = o.trim() })
+    }
     property bool confirmDoctor: false
     property bool nearLaptop: false
     property var callbacks: ({})
@@ -69,7 +88,9 @@ PlasmoidItem {
             + "echo cpu=$(sed -n 's/^model name[[:space:]]*: *//p' /proc/cpuinfo | head -n1); "
             + "echo ram=$(awk '/MemTotal/{printf \"%.1f GB\", $2/1048576}' /proc/meminfo); "
             + "echo disk=$(df -h / | awk 'NR==2{print $4 \" liberi din \" $2}'); "
-            + "echo kernel=$(uname -r); echo version=$(sed -n 's/^VERSION=//p' /etc/acm-release)",
+            + "echo kernel=$(uname -r); echo version=$(sed -n 's/^VERSION=//p' /etc/acm-release); "
+            + "echo boot=$(systemd-analyze 2>/dev/null | head -n1 | sed 's/^Startup finished in //'); "
+            + "echo slow=$(systemd-analyze blame --no-pager 2>/dev/null | head -n3 | awk '{print $NF \" \" $1}' | paste -sd, | sed 's/,/, /g')",
             function (o) { root.about = kv(o) })
     }
     function q(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'" }
@@ -596,13 +617,25 @@ PlasmoidItem {
                         Setting {
                             label: root.upd.text || "Verific pe GitHub…"; last: true
                             hint: "Actualizarea face întâi un punct de restaurare; o poți anula oricând."
-                            Btn { text: "Actualizează acum"; primary: true; onClicked: root.run("konsole --hold -e sudo /usr/local/bin/acm-update apply") }
+                            Btn {
+                                text: root.updBusy ? "Se instalează…" : "Actualizează acum"; primary: true; opacity: root.updBusy ? 0.5 : 1
+                                onClicked: root.updRun("apply")
+                            }
+                        }
+                    }
+                    // progresul, fără terminal
+                    Box {
+                        visible: root.updBusy || root.updLine !== ""
+                        ColumnLayout {
+                            Layout.fillWidth: true; Layout.margins: 20; spacing: 6
+                            Text { text: root.updBusy ? "Instalez… nu închide laptopul" : "Gata"; color: root.accent; font.pixelSize: 15; font.weight: Font.DemiBold }
+                            Lbl { Layout.fillWidth: true; text: root.updLine; color: root.ink2; font.pixelSize: 13 }
                         }
                     }
                     Box {
                         Setting { label: "Verifică din nou"; Btn { text: "Verifică"; onClicked: { root.upd = { version: root.upd.version }; root.loadUpd() } } }
                         Setting { label: "Revino la versiunea de dinainte"; last: true
-                            Btn { text: "Anulează ultima actualizare"; onClicked: root.run("konsole --hold -e sudo /usr/local/bin/acm-update rollback") } }
+                            Btn { text: "Anulează ultima actualizare"; onClicked: root.updRun("rollback") } }
                     }
                 }
 
@@ -620,7 +653,9 @@ PlasmoidItem {
                         Setting { label: "Procesor"; Lbl { text: root.about.cpu || "—" } }
                         Setting { label: "Memorie"; Lbl { text: root.about.ram || "—" } }
                         Setting { label: "Disc"; Lbl { text: root.about.disk || "—" } }
-                        Setting { label: "Nucleu Linux"; last: true; Lbl { text: root.about.kernel || "—" } }
+                        Setting { label: "Nucleu Linux"; Lbl { text: root.about.kernel || "—" } }
+                        Setting { label: "Pornire"; Lbl { text: root.about.boot || "—"; Layout.maximumWidth: 360 } }
+                        Setting { label: "Cel mai lent la pornire"; last: true; Lbl { text: root.about.slow || "—"; Layout.maximumWidth: 360 } }
                     }
                 }
             }

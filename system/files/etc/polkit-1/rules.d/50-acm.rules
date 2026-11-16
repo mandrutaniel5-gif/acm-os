@@ -8,3 +8,13 @@ polkit.addRule(function (action, subject) {
     return polkit.Result.YES;
   }
 });
+
+// Actualizările ACM OS se instalează din Setări, ca pe Windows/Mac: fără terminal și fără parolă
+// pentru utilizatorul principal așezat la laptop. Doar acm-update, nimic altceva.
+polkit.addRule(function (action, subject) {
+  if (action.id == "org.freedesktop.policykit.exec" &&
+      action.lookup("program") == "/opt/acm-os/system/bin/acm-update" &&
+      subject.local && subject.active && subject.isInGroup("sudo")) {
+    return polkit.Result.YES;
+  }
+});

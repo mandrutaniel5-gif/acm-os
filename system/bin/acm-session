@@ -21,6 +21,17 @@ if command -v kwriteconfig6 >/dev/null; then
   kwriteconfig6 --file plasma-nm --group General --key SystemConnectionsByDefault true
 fi
 
+# programe KDE care pornesc la fiecare intrare și nu ne trebuie (pornire mai rapidă pe Core 2 Duo)
+mkdir -p "$HOME/.config/autostart"
+for a in org.kde.xwaylandvideobridge org.kde.discover.notifier org.kde.kdeconnect.daemon baloo_file \
+         org.kde.kalendarac org.kde.plasma-welcome geoclue-demo-agent org.kde.kgpg; do
+  [ -f "/etc/xdg/autostart/$a.desktop" ] || continue
+  printf '[Desktop Entry]\nHidden=true\n' > "$HOME/.config/autostart/$a.desktop"
+done
+
+# parola Wi-Fi scrisă la pornirea asta se mută în sistem, ca data viitoare să nu mai fie cerută
+( for t in 60 240 600; do sleep "$t"; /opt/acm-os/system/bin/acm-ctl wifi-keep >/dev/null 2>&1; done ) &
+
 # căutarea pe Ctrl+Space
 command -v kwriteconfig6 >/dev/null && kwriteconfig6 --file kglobalshortcutsrc \
   --group services --group org.kde.krunner.desktop --key _launch $'Ctrl+Space\tAlt+Space\tAlt+F2\tSearch'
