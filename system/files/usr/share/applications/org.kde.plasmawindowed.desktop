@@ -6,4 +6,4 @@ Exec=/opt/acm-os/system/bin/acm-setari %u
 Icon=acm-setari
 Categories=Settings;System;
 Keywords=setari;aspect;tema;baterie;actualizari;wifi;bluetooth;sunet;
-StartupWMClass=plasmawindowed
+StartupWMClass=org.kde.plasmawindowed

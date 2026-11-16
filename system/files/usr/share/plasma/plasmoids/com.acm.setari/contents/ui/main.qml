@@ -59,7 +59,7 @@ PlasmoidItem {
     }
     function loadAbout() {
         run("echo model=$(cat /sys/class/dmi/id/product_name 2>/dev/null); "
-            + "echo cpu=$(sed -n 's/^model name *: *//p' /proc/cpuinfo | head -n1); "
+            + "echo cpu=$(sed -n 's/^model name[[:space:]]*: *//p' /proc/cpuinfo | head -n1); "
             + "echo ram=$(awk '/MemTotal/{printf \"%.1f GB\", $2/1048576}' /proc/meminfo); "
             + "echo disk=$(df -h / | awk 'NR==2{print $4 \" liberi din \" $2}'); "
             + "echo kernel=$(uname -r); echo version=$(sed -n 's/^VERSION=//p' /etc/acm-release)",
@@ -189,10 +189,10 @@ PlasmoidItem {
                 Repeater {
                     model: [
                         { id: "wifi", name: "Wi-Fi", icon: "network-wireless", tint: "#3b82f6" },
-                        { id: "bluetooth", name: "Bluetooth", icon: "preferences-system-bluetooth", tint: "#3b82f6" },
+                        { id: "bluetooth", name: "Bluetooth", glyph: "ᛒ", tint: "#3b82f6" },
                         { id: "sunet", name: "Sunet", icon: "audio-volume-high", tint: "#e5484d" },
                         { id: "baterie", name: "Baterie", icon: "battery-full", tint: "#46a758" },
-                        { id: "aspect", name: "Aspect", icon: "color-management", tint: "#BD9A6A" },
+                        { id: "aspect", name: "Aspect", glyph: "◐", tint: "#BD9A6A" },
                         { id: "actualizari", name: "Actualizări", icon: "update-none", tint: "#8e8e93" },
                         { id: "despre", name: "Despre", icon: "help-about", tint: "#BD9A6A" }
                     ]
@@ -205,7 +205,8 @@ PlasmoidItem {
                             anchors.fill: parent; anchors.leftMargin: 12; spacing: 12
                             Rectangle {
                                 implicitWidth: 28; implicitHeight: 28; radius: 7; color: modelData.tint
-                                Kirigami.Icon { anchors.centerIn: parent; width: 18; height: 18; source: modelData.icon; isMask: true; color: "white" }
+                                Kirigami.Icon { visible: !modelData.glyph; anchors.centerIn: parent; width: 18; height: 18; source: modelData.icon || ""; isMask: true; color: "white" }
+                                Text { visible: !!modelData.glyph; anchors.centerIn: parent; text: modelData.glyph || ""; color: "white"; font.pixelSize: 16; font.weight: Font.Bold }
                             }
                             Text { text: modelData.name; color: root.ink; font.pixelSize: 15; Layout.fillWidth: true }
                         }
