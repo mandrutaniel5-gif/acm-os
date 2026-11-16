@@ -1,0 +1,16 @@
+{
+  "KPackageStructure": "Plasma/LookAndFeel",
+  "X-Plasma-APIVersion": "2",
+  "KPlugin": {
+    "Id": "com.acm.ivory",
+    "Name": "ACM Ivory",
+    "Description": "Tema Ivory a ACM OS",
+    "Authors": [
+      {
+        "Name": "ACM"
+      }
+    ],
+    "License": "GPL-2.0+",
+    "Version": "0.2"
+  }
+}

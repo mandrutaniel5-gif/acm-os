@@ -10,4 +10,15 @@ ACM_IMAGE=1 /opt/acm-os/system/bin/acm-apply
 for f in /usr/share/applications/*calamares*.desktop /usr/share/applications/install-debian.desktop /etc/skel/Desktop/*.desktop; do
   [ -f "$f" ] && sed -i -e 's/^Name=.*/Name=Instalează ACM OS/' -e 's/^Name\[ro\]=.*/Name[ro]=Instalează ACM OS/' "$f"
 done
+
+
+# Instalatorul arată „ACM OS”, nu „Debian”
+b=/etc/calamares/branding/debian
+if [ -f "$b/branding.desc" ]; then
+  cp /usr/share/pixmaps/acm-os.png "$b/acm-os.png"
+  sed -i -E \
+    -e '/^\s*(productName|shortProductName|versionedName|shortVersionedName|bootloaderEntryName):/s/:.*/: "ACM OS"/' \
+    -e '/^\s*(productLogo|productIcon|productWelcome):/s/:.*/: "acm-os.png"/' \
+    "$b/branding.desc"
+fi
 apt-get clean

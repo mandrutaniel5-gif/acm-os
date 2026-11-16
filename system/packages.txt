@@ -36,6 +36,7 @@ gpg
 btrfs-progs
 snapper
 systemd-zram-generator
+plymouth                     # ecranul de pornire ACM
 nodejs
 npm
 

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Temă ACM: Ivory
+Comment=Schimbă aspectul ACM OS
+Exec=/opt/acm-os/system/bin/acm-theme ivory
+Icon=acm-os
+Categories=Settings;
+Keywords=temă;aspect;ivory;acm;

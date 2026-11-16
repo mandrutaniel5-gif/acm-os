@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Id": "ACM-Olive",
+    "Name": "ACM Olive",
+    "Authors": [
+      {
+        "Name": "ACM"
+      }
+    ],
+    "License": "CC-BY-SA-4.0"
+  }
+}

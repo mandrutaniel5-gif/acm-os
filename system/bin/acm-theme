@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Schimbă tema ACM OS pentru utilizatorul curent (fără sudo).
+#   acm-theme ivory|obsidian|olive [--reset-layout]
+set -uo pipefail
+case "${1:-}" in
+  ivory) name=Ivory ;; obsidian) name=Obsidian ;; olive) name=Olive ;;
+  *) echo "folosire: acm-theme ivory|obsidian|olive [--reset-layout]"; exit 2 ;;
+esac
+id="$1"
+args=(--apply "com.acm.$id")
+[ "${2:-}" = --reset-layout ] && args+=(--resetLayout)
+
+plasma-apply-lookandfeel "${args[@]}"
+plasma-apply-colorscheme "ACM$name" >/dev/null 2>&1
+plasma-apply-wallpaperimage "/usr/share/wallpapers/ACM-$name/contents/images/2560x1600.png" >/dev/null 2>&1
+# butoanele ferestrei în stânga, ca pe Mac
+if command -v kwriteconfig6 >/dev/null; then
+  kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XIA
+  kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ""
+fi
+busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null 2>&1 || true
+
+mkdir -p "$HOME/.config/acm" && echo "$id" > "$HOME/.config/acm/theme"

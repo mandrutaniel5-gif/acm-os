@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=ACM OS
+Exec=/opt/acm-os/system/bin/acm-session
+OnlyShowIn=KDE;
+X-KDE-autostart-phase=2
+NoDisplay=true

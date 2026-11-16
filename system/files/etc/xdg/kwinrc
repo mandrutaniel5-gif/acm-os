@@ -1,0 +1,13 @@
+[org.kde.kdecoration2]
+library=org.kde.breeze
+theme=Breeze
+ButtonsOnLeft=XIA
+ButtonsOnRight=
+
+[Compositing]
+# efectele grele încetinesc GeForce 320M
+AnimationSpeed=2
+
+[Plugins]
+blurEnabled=false
+contrastEnabled=false

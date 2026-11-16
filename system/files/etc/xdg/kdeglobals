@@ -1,0 +1,19 @@
+# Setări implicite ACM OS pentru toți utilizatorii (fiecare le poate schimba din Setări).
+[General]
+ColorScheme=ACMObsidian
+AccentColor=201,165,116
+font=Inter,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+menuFont=Inter,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+toolBarFont=Inter,9,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+smallestReadableFont=Inter,8,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+fixed=JetBrains Mono,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+
+[Icons]
+Theme=breeze-dark
+
+[KDE]
+LookAndFeelPackage=com.acm.obsidian
+AnimationDurationFactor=0.5
+
+[WM]
+activeFont=Inter,10,-1,5,600,0,0,0,0,0,0,0,0,0,0,1

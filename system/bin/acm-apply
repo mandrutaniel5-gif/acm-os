@@ -87,7 +87,22 @@ if [ -n "$USER_NAME" ] && ! runuser -l "$USER_NAME" -c 'command -v claude >/dev/
   fi
 fi
 
-# 9. Comenzile ACM și versiunea
+# 9. Aspectul ACM: ecran de pornire, numele sistemului
+if command -v plymouth-set-default-theme >/dev/null && [ "$(plymouth-set-default-theme)" != acm ]; then
+  plymouth-set-default-theme acm && update-initramfs -u >/dev/null 2>&1
+fi
+mkdir -p /etc/xdg
+printf "[General]
+Name=ACM OS
+Version=%s
+LogoPath=/usr/share/pixmaps/acm-os.png
+Website=https://github.com/mandrutaniel5-gif/acm-os
+" "$VERSION" > /etc/xdg/kcm-about-distrc
+sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"ACM OS $VERSION\"/" /usr/lib/os-release
+gtk-update-icon-cache -q /usr/share/icons/hicolor 2>/dev/null || true
+ok "aspect ACM"
+
+# 10. Comenzile ACM și versiunea
 ln -sf "$SYS/bin/acm-update" /usr/local/bin/acm-update
 ln -sf "$SYS/bin/acm-apply"  /usr/local/bin/acm-apply
 printf 'NAME="ACM OS"\nVERSION=%s\n' "$VERSION" > /etc/acm-release

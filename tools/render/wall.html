@@ -1,0 +1,13 @@
+<!doctype html><html><head><meta charset="utf-8"><style>
+*{margin:0}html,body{width:100vw;height:100vh;overflow:hidden}
+body.ivory{background:radial-gradient(75vw 70vh at 78% 30%,#fbf8f2 0%,#efe9df 45%,#e2d8c8 100%)}
+body.obsidian{background:radial-gradient(70vw 75vh at 62% 40%,#2a2620 0%,#151413 50%,#0b0b0c 100%)}
+body.olive{background:radial-gradient(80vw 85vh at 50% 40%,#3a3e33 0%,#2c2f28 50%,#1d1f1a 100%)}
+img{position:absolute;width:59vh;height:59vh;left:-12vh;bottom:-18vh}
+.ivory img{opacity:.07}.obsidian img{opacity:.07}.olive img{opacity:.13}
+.glow{position:absolute;width:95vh;height:95vh;left:30vw;top:5vh;border-radius:50%;background:radial-gradient(circle,rgba(201,165,116,.12),transparent 62%)}
+.ivory .glow{background:radial-gradient(circle,rgba(255,255,255,.5),transparent 62%)}
+</style></head><body><div class="glow"></div><img id="s"><script>
+const t=location.hash.slice(1)||'obsidian';document.body.className=t;
+s.src=t==='ivory'?'sigiliu-pe-fundal-deschis.svg':'sigiliu-pe-fundal-inchis.svg';
+</script></body></html>

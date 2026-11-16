@@ -1,0 +1,28 @@
+# Ecranul de pornire ACM OS: sigiliul pe negru, bară aurie de progres, „FLAWLESS EXECUTION”.
+Window.SetBackgroundTopColor(0.043, 0.043, 0.047);
+Window.SetBackgroundBottomColor(0.043, 0.043, 0.047);
+sw = Window.GetWidth();
+sh = Window.GetHeight();
+
+seal.image = Image("seal.png").Scale(170, 170);
+seal.sprite = Sprite(seal.image);
+seal.sprite.SetPosition(sw / 2 - 85, sh * 0.44 - 85, 1);
+
+tag.image = Image("tag.png").Scale(330, 22);
+tag.sprite = Sprite(tag.image);
+tag.sprite.SetPosition(sw / 2 - 165, sh * 0.70, 1);
+
+bar.x = sw / 2 - 100;
+bar.y = sh * 0.66;
+bg.sprite = Sprite(Image("bar-bg.png").Scale(200, 3));
+bg.sprite.SetPosition(bar.x, bar.y, 1);
+bar.full = Image("bar.png");
+bar.sprite = Sprite(bar.full.Scale(1, 3));
+bar.sprite.SetPosition(bar.x, bar.y, 2);
+
+fun progress_cb(duration, progress) {
+  w = Math.Int(200 * progress);
+  if (w < 1) w = 1;
+  bar.sprite.SetImage(bar.full.Scale(w, 3));
+}
+Plymouth.SetBootProgressFunction(progress_cb);
