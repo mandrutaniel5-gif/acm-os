@@ -183,8 +183,8 @@ if [ "$IMAGE" != 1 ]; then
   fi
   kh="$(getent passwd copii | cut -d: -f6)"
   if [ -n "$kh" ]; then
-    install -d -o copii -g copii "$kh/.config"
-    cat > "$kh/.config/kdeglobals" <<'KIDS'
+    # fișierele se scriu ca utilizatorul copii, nu ca root: o legătură pusă în casa lui nu poate atinge sistemul
+    runuser -u copii -- sh -c 'mkdir -p "$1/.config" && cat > "$1/.config/kdeglobals"' sh "$kh" <<'KIDS'
 [KDE]
 LookAndFeelPackage=com.acm.copii
 
@@ -203,8 +203,8 @@ lock_screen=false
 plasma/allow_configure_when_locked=false
 plasma-desktop/add_activities=false
 KIDS
-    printf '[Daemon]\nAutolock=false\nLockOnResume=false\n' > "$kh/.config/kscreenlockerrc"
-    chown copii:copii "$kh/.config/kdeglobals" "$kh/.config/kscreenlockerrc"
+    printf '[Daemon]\nAutolock=false\nLockOnResume=false\n' |
+      runuser -u copii -- sh -c 'cat > "$1/.config/kscreenlockerrc"' sh "$kh"
   fi
   ok "mod copii pregătit"
 fi
