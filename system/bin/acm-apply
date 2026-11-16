@@ -179,8 +179,10 @@ ok "aspect ACM"
 # Modul copii: contul „copii”, fără parolă, cu ecranul de butoane mari și fără setări
 if [ "$IMAGE" != 1 ]; then
   if ! id copii >/dev/null 2>&1; then
-    useradd -m -u 2000 -c "Copii" -s /bin/bash -G audio,video copii && passwd -d copii >/dev/null
+    useradd -m -u 2000 -c "Copii" -s /bin/bash -G audio,video copii
   fi
+  # parolă blocată: intră doar automat (SDDM), nu și din consolă
+  passwd -l copii >/dev/null 2>&1 || true
   kh="$(getent passwd copii | cut -d: -f6)"
   if [ -n "$kh" ]; then
     # fișierele se scriu ca utilizatorul copii, nu ca root: o legătură pusă în casa lui nu poate atinge sistemul

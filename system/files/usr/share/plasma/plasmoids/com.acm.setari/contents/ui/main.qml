@@ -103,7 +103,7 @@ PlasmoidItem {
     function loadSnd() { run(bin + "acm-ctl sound", function (o) { root.snd = kv(o) }) }
     function connectWifi(ssid, pw) {
         wifiMsg = "Mă conectez la " + ssid + "…";
-        run(bin + "acm-ctl wifi-connect " + q(ssid) + (pw ? " " + q(pw) : ""), function (o) {
+        run((pw ? "printf '%s\n' " + q(pw) + " | " : "") + bin + "acm-ctl wifi-connect " + q(ssid) + (pw ? " -" : ""), function (o) {
             var r = kv(o);
             root.wifiMsg = r.ok === "1" ? "" : "Nu m-am putut conecta. Verifică parola.";
             if (r.ok === "1") root.pickSsid = "";

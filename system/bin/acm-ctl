@@ -3,7 +3,7 @@
 # Răspunde cu linii cheie=valoare.
 #   acm-ctl wifi                    starea + rețelele din jur
 #   acm-ctl wifi-on|wifi-off
-#   acm-ctl wifi-connect <ssid> [parola]
+#   acm-ctl wifi-connect <ssid> [-]     cu „-”, parola se citește de pe intrarea standard
 #   acm-ctl wifi-forget <ssid>
 #   acm-ctl bt                      starea + dispozitivele
 #   acm-ctl bt-on|bt-off|bt-scan
@@ -54,6 +54,8 @@ case "${1:-}" in
   wifi-off) nmcli radio wifi off ;;
   wifi-connect)
     ssid="${2:-}"; [ -n "$ssid" ] || exit 2
+    # „-” = parola vine pe intrarea standard (Setările nu o pun în linia de comandă)
+    if [ "${3:-}" = - ]; then IFS= read -r pass || true; set -- "$1" "$2" "$pass"; fi
     if nmcli -t -f NAME connection show | grep -qxF "$ssid" && [ -z "${3:-}" ]; then
       out="$(nmcli connection up id "$ssid" 2>&1)"
     elif [ -n "${3:-}" ]; then
