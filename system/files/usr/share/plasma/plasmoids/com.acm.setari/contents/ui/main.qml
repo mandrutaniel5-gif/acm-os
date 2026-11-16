@@ -494,6 +494,10 @@ PlasmoidItem {
                             }
                         }
                         Setting {
+                            label: "Widget-urile de pe desktop"; hint: "Le pune înapoi în coloana din dreapta, după ecranul tău"
+                            Btn { text: "Așază în dreapta"; onClicked: root.run(root.bin + "acm-theme widgets") }
+                        }
+                        Setting {
                             label: "Fundal, fonturi, cursor"; last: true
                             Btn { text: "Deschide"; onClicked: root.run("kcmshell6 kcm_fonts") }
                         }

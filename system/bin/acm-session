@@ -21,6 +21,12 @@ if command -v kwriteconfig6 >/dev/null; then
   kwriteconfig6 --file plasma-nm --group General --key SystemConnectionsByDefault true
 fi
 
+# widget-urile în dreapta, după ecranul real (o dată; din nou din Setări → Aspect dacă e nevoie)
+if [ ! -f "$cfg/widgets-placed" ]; then
+  ( for _ in $(seq 60); do busctl --user status org.kde.plasmashell >/dev/null 2>&1 && break; sleep 1; done
+    sleep 25; /opt/acm-os/system/bin/acm-theme widgets >/dev/null 2>&1 ) &
+fi
+
 # programe KDE care pornesc la fiecare intrare și nu ne trebuie (pornire mai rapidă pe Core 2 Duo)
 mkdir -p "$HOME/.config/autostart"
 for a in org.kde.xwaylandvideobridge org.kde.discover.notifier org.kde.kdeconnect.daemon baloo_file \

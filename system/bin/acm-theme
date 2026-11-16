@@ -34,7 +34,19 @@ apply_theme() {
   echo "Tema ACM $name aplicată."
 }
 
+# Coloana de widget-uri se așază în dreapta după ecranul real (dimensiune și scalare citite de Plasma
+# în momentul ăsta), nu după numere scrise dinainte.
+place_widgets() {
+  local js='var d = desktops()[0]; var g = screenGeometry(d.screen);
+var ws = d.widgets("com.acm.widgets");
+for (var i = 0; i < ws.length; i++) ws[i].remove();
+var w = 250, h = Math.min(560, g.height - 140);
+d.addWidget("com.acm.widgets", g.width - w - 20, 48, w, h);'
+  busctl --user call org.kde.plasmashell /PlasmaShell org.kde.PlasmaShell evaluateScript s "$js" >/dev/null 2>&1
+}
+
 case "${1:-}" in
+  widgets) place_widgets && touch "$cfg/widgets-placed" && echo "Widget-urile sunt în dreapta." ;;
   accent)
     [[ "${2:-}" =~ ^#[0-9A-Fa-f]{6}$ ]] || { echo "folosire: acm-theme accent '#RRGGBB'"; exit 2; }
     echo "$2" > "$cfg/accent"
