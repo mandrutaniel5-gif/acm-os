@@ -3,6 +3,10 @@
 ACM_DIR="${ACM_DIR:-/opt/acm-os}"
 ACM_STATE="${ACM_STATE:-/var/lib/acm}"
 
+# /opt/acm-os e al lui root. Rulat cu sudo, git îl compară cu utilizatorul care a dat sudo
+# și refuză repository-ul („dubious ownership”). Îl declarăm sigur pentru toate comenzile git.
+export GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="$ACM_DIR"
+
 say()  { printf '\033[1;33m▸\033[0m %s\n' "$*"; }
 ok()   { printf '\033[1;32m✓\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;31m!\033[0m %s\n' "$*" >&2; }
