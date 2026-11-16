@@ -37,7 +37,7 @@ PlasmoidItem {
                 Layout.alignment: Qt.AlignHCenter; spacing: 4
                 Text {
                     Layout.alignment: Qt.AlignHCenter
-                    text: { var h = root.now.getHours(); return h < 11 ? "Bună dimineața! 🌞" : h < 18 ? "Bună! Ce facem azi? 🎈" : "Bună seara! 🌙" }
+                    text: { var h = root.now.getHours(); return h < 11 ? "Bună dimineața!" : h < 18 ? "Bună! Ce facem azi?" : "Bună seara!" }
                     color: Kirigami.Theme.textColor; font.pixelSize: 44; font.weight: Font.Bold
                 }
                 Text {

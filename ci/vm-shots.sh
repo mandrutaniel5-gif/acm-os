@@ -44,7 +44,7 @@ for pg in wifi bluetooth sunet aspect baterie actualizari despre; do
   write "clear; setsid -f sh -c 'acm-setari $pg 2>>/tmp/setari.log'"; keys ret; sleep 10; shot "11-setari-$pg"; keys alt-f4; sleep 3
 done
 write "clear; journalctl --user -b --no-pager | grep -iE 'plasmashell|kwin_|js: |qml|plasmoids' | grep -iE 'error|crash|fail|warn|acm' | tail -32"; keys ret; sleep 4; shot 12-jurnal
-write "clear; grep -iE 'error|warn|qml' /tmp/setari.log | tail -12; coredumpctl list --no-pager 2>&1 | tail -4; cat ~/.config/acm/theme; acm-prio status | head -4; systemctl --user is-active acm-prio.timer; ls /usr/local/share/applications | wc -l"; keys ret; sleep 4; shot 13-stare
+write "clear; grep -iE 'error|warn|qml' /tmp/setari.log | tail -12; coredumpctl list --no-pager 2>&1 | tail -4; cat ~/.config/acm/theme; acm-prio status | head -3; busctl --user call org.kde.KWin /Scripting org.kde.kwin.Scripting isScriptLoaded s acm-focus; journalctl --user -b -o cat -u 'acm-prio-focus@*' | tail -3; journalctl --user -b -o cat | grep -i 'acm-focus' | tail -3; grep -A1 -i krunner ~/.config/kglobalshortcutsrc"; keys ret; sleep 4; shot 13-stare
 write "clear; setsid -f sh -c 'plasmawindowed com.acm.copii 2>>/tmp/setari.log'"; keys ret; sleep 10; shot 14-mod-copii; keys alt-f4; sleep 3
 keys alt-f4; sleep 2
 sudo kill "$(cat /tmp/qemu.pid)" 2>/dev/null

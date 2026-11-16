@@ -308,7 +308,7 @@ PlasmoidItem {
                                     label: net.modelData.ssid
                                     hint: net.modelData.inuse ? "Conectat" : (net.modelData.saved ? "Salvată" : "")
                                     last: net.index === root.wifi.nets.length - 1 && root.pickSsid !== net.modelData.ssid
-                                    Text { text: net.modelData.secure ? "🔒" : ""; font.pixelSize: 12; color: root.ink2 }
+                                    Kirigami.Icon { visible: net.modelData.secure; implicitWidth: 14; implicitHeight: 14; source: "object-locked" }
                                     Text { text: net.modelData.signal + "%"; color: root.ink2; font.pixelSize: 13 }
                                     Btn {
                                         visible: !net.modelData.inuse

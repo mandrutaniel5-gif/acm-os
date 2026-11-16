@@ -161,6 +161,8 @@ org.kde.kate|Editor de cod
 org.kde.kcalc|Calculator
 org.kde.plasma-systemmonitor|Monitor activitate
 google-chrome|Chrome
+tuxpaint|Desen
+org.kde.ktuberling|Cartoful
 NAMES
 for id in systemsettings kdesystemsettings org.kde.kinfocenter org.kde.kmenuedit org.kde.khelpcenter \
           org.kde.kwalletmanager5 org.kde.kwalletmanager org.kde.discover org.kde.konqueror org.kde.ksystemlog \
@@ -168,7 +170,8 @@ for id in systemsettings kdesystemsettings org.kde.kinfocenter org.kde.kmenuedit
           org.kde.kdeconnect-settings org.kde.kdeconnect.nonplasma org.kde.plasma.emojier org.kde.kuserfeedback-console \
           org.kde.kmousetool org.kde.kmag org.kde.kmouth org.kde.klipper org.kde.plasma.themeexplorer \
           xterm debian-xterm debian-uxterm vim gvim nm-connection-editor display-im6.q16 htop info yelp \
-          install-debian org.freedesktop.IBus.Setup ibus-setup im-config qv4l2 qvidcap; do
+          install-debian org.freedesktop.IBus.Setup ibus-setup im-config qv4l2 qvidcap \
+          tuxpaint-config org.kde.partitionmanager org.kde.drkonqi.coredump.gui zutty; do
   src="/usr/share/applications/$id.desktop"; [ -f "$src" ] || continue
   awk '{ print } /^\[Desktop Entry\]$/ { print "NoDisplay=true" }' "$src" | grep -v '^NoDisplay=false' \
     > "/usr/local/share/applications/$id.desktop"
