@@ -1,0 +1,3 @@
+# id|nume|versiune|electron|categorii|descriere
+acm-docs|ACM Docs|2.6.8|44.9.3|Office;|PDF, documente, tabele, prezentări și facturi (e-Factura)
+acm-contabil|ACM Contabil|1.2.2|45.1.0|Office;Finance;|Contabilitate în partidă dublă, cu asistent AI
