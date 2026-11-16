@@ -56,6 +56,8 @@ Context=Places
     }
     // sigiliul din bara de sus: deschis pe teme închise, închis pe tema luminoasă
     write(`icons/${name}/apps/scalable/acm-os.svg`, seal(sealFile));
+    // butonul de meniu din bara de sus: același sigiliu, decupat strâns ca să umple butonul
+    write(`icons/${name}/apps/scalable/acm-meniu.svg`, seal(sealFile).replace(/viewBox="[^"]*"/, 'viewBox="24 24 352 352"'));
   }
 
   // --- decorația ferestrelor

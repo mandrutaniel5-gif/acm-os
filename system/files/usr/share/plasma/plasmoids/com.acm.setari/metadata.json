@@ -1,0 +1,14 @@
+{
+  "KPlugin": {
+    "Id": "com.acm.setari",
+    "Name": "Setări",
+    "Description": "Setările ACM OS: aspect, baterie, actualizări",
+    "Category": "System Information",
+    "Icon": "acm-setari",
+    "Authors": [{ "Name": "ACM" }],
+    "License": "GPL",
+    "Version": "0.3"
+  },
+  "KPackageStructure": "Plasma/Applet",
+  "X-Plasma-API-Minimum-Version": "6.0"
+}

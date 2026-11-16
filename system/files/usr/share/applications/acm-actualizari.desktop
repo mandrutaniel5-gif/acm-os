@@ -2,7 +2,7 @@
 Type=Application
 Name=Actualizări ACM OS
 Comment=Instalează ultima versiune ACM OS
-Exec=konsole --hold -e sudo /usr/local/bin/acm-update apply
+Exec=/opt/acm-os/system/bin/acm-setari actualizari
 Icon=system-software-update
 Categories=System;Settings;
 Keywords=actualizare;update;acm;

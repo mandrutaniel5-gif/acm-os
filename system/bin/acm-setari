@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Deschide Setările ACM OS (aspect, baterie, actualizări, despre), opțional direct pe o pagină:
+#   acm-setari [aspect|baterie|actualizari|despre]
+mkdir -p "$HOME/.cache/acm"
+echo "${1:-aspect}" > "$HOME/.cache/acm/setari-page"
+exec plasmawindowed com.acm.setari

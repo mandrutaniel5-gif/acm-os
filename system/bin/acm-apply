@@ -38,6 +38,15 @@ mapfile -t PKGS < <(sed 's/#.*//' "$SYS/packages.txt" | tr -s ' \t' '\n' | grep 
 apt-get install -y -q "${PKGS[@]}" || for p in "${PKGS[@]}"; do apt-get install -y -q "$p" || warn "nu s-a instalat: $p"; done
 # ce nu face parte din ACM OS (Chrome e browserul; ecranul de bun venit KDE)
 apt-get purge -y -q plasma-welcome firefox-esr >/dev/null 2>&1 || true
+# aplicații KDE pe care ACM OS le înlocuiește (Chrome, Setări ACM, acm-update), doar dacă nu iau desktopul cu ele
+for p in konqueror plasma-discover khelpcenter; do
+  dpkg -s "$p" >/dev/null 2>&1 || continue
+  if apt-get -s purge "$p" | grep -qE '^(Remv|Purg) (plasma-desktop|plasma-workspace|systemsettings|dolphin|konsole) '; then
+    warn "păstrez $p (alte componente depind de el)"
+  else
+    apt-get purge -y -q "$p" >/dev/null 2>&1 || true
+  fi
+done
 ok "pachete"
 
 # 3. Fișierele ACM OS peste sistem
@@ -100,18 +109,16 @@ Version=%s
 LogoPath=/usr/share/pixmaps/acm-os.png
 Website=https://github.com/mandrutaniel5-gif/acm-os
 " "$VERSION" > /etc/xdg/kcm-about-distrc
-sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"ACM OS $VERSION\"/" /usr/lib/os-release
 gtk-update-icon-cache -q /usr/share/icons/hicolor 2>/dev/null || true
-# Setările din dock cu iconița ACM (o copie locală a lansatorului are prioritate)
-if [ -f /usr/share/applications/systemsettings.desktop ]; then
-  mkdir -p /usr/local/share/applications
-  sed "s/^Icon=.*/Icon=acm-setari/" /usr/share/applications/systemsettings.desktop > /usr/local/share/applications/systemsettings.desktop
-fi
+# Setările ACM înlocuiesc lansatorul KDE din dock (versiunile 0.2 îi schimbau iconița)
+rm -f /usr/local/share/applications/systemsettings.desktop
+sed -i -e 's/^NAME=.*/NAME="ACM OS"/' -e "s/^PRETTY_NAME=.*/PRETTY_NAME=\"ACM OS $VERSION\"/" /usr/lib/os-release
+printf 'ACM OS %s \\n \\l\n\n' "$VERSION" > /etc/issue
 ok "aspect ACM"
 
 # 10. Comenzile ACM și versiunea
 ln -sf "$SYS/bin/acm-update" /usr/local/bin/acm-update
 ln -sf "$SYS/bin/acm-apply"  /usr/local/bin/acm-apply
-ln -sf "$SYS/bin/acm-theme"  /usr/local/bin/acm-theme
+for c in acm-theme acm-battery acm-setari; do ln -sf "$SYS/bin/$c" "/usr/local/bin/$c"; done
 printf 'NAME="ACM OS"\nVERSION=%s\n' "$VERSION" > /etc/acm-release
 ok "ACM OS $VERSION aplicat"

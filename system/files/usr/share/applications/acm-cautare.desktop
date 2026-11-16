@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Caută
+Comment=Caută aplicații, fișiere și acțiuni (Ctrl+Space)
+Exec=krunner
+Icon=system-search
+NoDisplay=true

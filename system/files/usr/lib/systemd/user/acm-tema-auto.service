@@ -1,0 +1,6 @@
+[Unit]
+Description=ACM OS: tema după ora din zi
+
+[Service]
+Type=oneshot
+ExecStart=/opt/acm-os/system/bin/acm-theme tick

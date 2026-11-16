@@ -24,8 +24,13 @@ PlasmoidItem {
         id: shell
         engine: "executable"
         connectedSources: []
-        onNewData: (source, data) => { root.info = root.parse(data["stdout"]); disconnectSource(source) }
+        onNewData: (source, data) => {
+            if (source.indexOf("acm-widget-info") >= 0) root.info = root.parse(data["stdout"])
+            else refresh.restart()
+            disconnectSource(source)
+        }
     }
+    Timer { id: refresh; interval: 1500; onTriggered: shell.connectSource("/opt/acm-os/system/bin/acm-widget-info") }
     Timer {
         interval: 20000; running: true; repeat: true; triggeredOnStart: true
         onTriggered: shell.connectSource("/opt/acm-os/system/bin/acm-widget-info")
@@ -38,10 +43,12 @@ PlasmoidItem {
     function cap(s) { return s.length ? s.charAt(0).toUpperCase() + s.slice(1) : s }
     function batteryText() {
         if (!info.bat) return "Nu e detectată";
-        if (info.batstate === "Charging") return "Se încarcă";
+        var min = parseInt(info.batmin);
+        var eta = min > 0 && min < 1000 ? " · " + (min >= 60 ? Math.floor(min / 60) + " h " + (min % 60) + " min" : min + " min") : "";
+        if (info.batstate === "Charging") return "Se încarcă" + eta;
         if (info.batstate === "Full") return "Încărcată";
         if (info.batstate === "Not charging") return "Nu se încarcă";
-        return "Pe baterie";
+        return "Pe baterie" + eta;
     }
 
     component Card: Rectangle {
@@ -67,9 +74,9 @@ PlasmoidItem {
         Layout.preferredWidth: 250
 
         Card {
-            Text { text: root.cap(Qt.formatDate(root.now, "dddd, d MMMM")); color: root.ink2; font.pixelSize: 13 }
+            Text { text: root.cap(root.now.toLocaleDateString(Qt.locale("ro_RO"), "dddd, d MMMM")); color: root.ink2; font.pixelSize: 13 }
             Text { text: Qt.formatTime(root.now, "HH:mm"); color: root.ink; font.pixelSize: 40; font.weight: Font.Light }
-            Text { text: "Oradea"; color: root.ink2; font.pixelSize: 13 }
+            Text { text: "Oradea" + (root.info.weather ? " · " + root.info.weather : ""); color: root.ink2; font.pixelSize: 13 }
         }
 
         Card {
@@ -97,12 +104,22 @@ PlasmoidItem {
                     spacing: 2
                     Text { text: root.info.bat ? "Baterie " + root.info.bat + "%" : "Baterie"; color: root.ink; font.pixelSize: 14; font.weight: Font.DemiBold }
                     Text { text: root.batteryText(); color: root.ink2; font.pixelSize: 13 }
+                    Text {
+                        visible: root.info.doctor === "running"
+                        text: "Doctor baterie activ · OPREȘTE"
+                        color: "#e0675a"; font.pixelSize: 12; font.weight: Font.DemiBold
+                        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: shell.connectSource("/opt/acm-os/system/bin/acm-battery stop") }
+                    }
                 }
             }
         }
 
         Card {
-            Text { text: "Proiecte"; color: root.ink; font.pixelSize: 14; font.weight: Font.DemiBold; Layout.bottomMargin: 4 }
+            RowLayout {
+                Layout.fillWidth: true; Layout.bottomMargin: 4
+                Text { text: "Proiecte"; color: root.ink; font.pixelSize: 14; font.weight: Font.DemiBold; Layout.fillWidth: true }
+                Text { text: root.info.projcount || ""; visible: (root.info.projcount || "0") !== "0"; color: root.ink2; font.pixelSize: 13 }
+            }
             Repeater {
                 model: [root.info.proj0, root.info.proj1, root.info.proj2].filter(function (p) { return !!p })
                 delegate: RowLayout {
@@ -127,5 +144,7 @@ PlasmoidItem {
                 valueColor: root.info.available ? root.gold : "#4caf6a"
             }
         }
+        // cardurile stau strânse sus, ca în machete
+        Item { Layout.fillHeight: true }
     }
 }

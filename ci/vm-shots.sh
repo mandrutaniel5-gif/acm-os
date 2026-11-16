@@ -35,15 +35,17 @@ sleep 20; shot 01-pornire
 sleep 70; shot 02-desktop-prima-vedere
 sleep 60; shot 03-desktop
 keys alt-f1; sleep 4; shot 04-meniu-aplicatii; keys esc; sleep 2
-keys alt-spc; sleep 3; write dolphin; sleep 3; shot 05-cautare; keys ret; sleep 8; shot 06-fisiere; keys alt-f4; sleep 2
+keys ctrl-spc; sleep 3; write dolphin; sleep 3; shot 05-cautare; keys ret; sleep 8; shot 06-fisiere; keys alt-f4; sleep 2
 keys ctrl-alt-t; sleep 6; shot 07-terminal
 write "acm-theme ivory";    keys ret; sleep 12; shot 08-tema-ivory
 write "acm-theme olive";    keys ret; sleep 12; shot 09-tema-olive
 write "acm-theme obsidian"; keys ret; sleep 12; shot 10-tema-obsidian
-write "clear; journalctl --user -b --no-pager | grep -iE 'plasmashell|kwin_|js: |qml' | grep -iE 'error|crash|fail|warn' | tail -32"; keys ret; sleep 4; shot 12-jurnal
-write "clear; coredumpctl list --no-pager 2>&1 | tail -5; ls ~/.config/acm; cat ~/.config/acm/theme"; keys ret; sleep 3; shot 13-stare
+for pg in aspect baterie actualizari despre; do
+  write "clear; setsid -f sh -c 'acm-setari $pg 2>>/tmp/setari.log'"; keys ret; sleep 10; shot "11-setari-$pg"; keys alt-f4; sleep 3
+done
+write "clear; journalctl --user -b --no-pager | grep -iE 'plasmashell|kwin_|js: |qml|plasmoids' | grep -iE 'error|crash|fail|warn|acm' | tail -32"; keys ret; sleep 4; shot 12-jurnal
+write "clear; grep -iE 'error|warn|qml' /tmp/setari.log | tail -12; coredumpctl list --no-pager 2>&1 | tail -4; cat ~/.config/acm/theme; acm-battery info"; keys ret; sleep 4; shot 13-stare
 keys alt-f4; sleep 2
-keys alt-spc; sleep 3; write systemsettings; sleep 2; keys ret; sleep 10; shot 11-setari
 sudo kill "$(cat /tmp/qemu.pid)" 2>/dev/null
 
 # urcă pe ramura screens

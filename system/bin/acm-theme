@@ -1,24 +1,67 @@
 #!/usr/bin/env bash
-# Schimbă tema ACM OS pentru utilizatorul curent (fără sudo).
-#   acm-theme ivory|obsidian|olive
+# Aspectul ACM OS pentru utilizatorul curent (fără sudo).
+#   acm-theme ivory|obsidian|olive   schimbă tema
+#   acm-theme accent '#RRGGBB'       culoarea de accent
+#   acm-theme anim 0|0.5|1           animații: oprite / rapide / line
+#   acm-theme auto on|off            Ivory ziua (7–19), Obsidian seara
+#   acm-theme tick                   apelat de acm-tema-auto.timer
+#   acm-theme status                 setările curente, ca linii cheie=valoare
 set -uo pipefail
+cfg="$HOME/.config/acm"; mkdir -p "$cfg"
+kw() { command -v kwriteconfig6 >/dev/null && kwriteconfig6 "$@"; }
+
+apply_theme() {
+  local id="$1" name icons
+  case "$id" in
+    ivory) name=Ivory icons=ACM-Light ;; obsidian) name=Obsidian icons=ACM-Dark ;; olive) name=Olive icons=ACM-Dark ;;
+    *) echo "folosire: acm-theme ivory|obsidian|olive|accent|anim|auto|status"; exit 2 ;;
+  esac
+  plasma-apply-lookandfeel --apply "com.acm.$id" >/dev/null 2>&1
+  plasma-apply-colorscheme "ACM$name" >/dev/null 2>&1
+  plasma-apply-wallpaperimage "/usr/share/wallpapers/ACM-$name/contents/images/2560x1600.png" >/dev/null 2>&1
+  kw --file kdeglobals --group Icons --key Theme "$icons"
+  kw --file kwinrc --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae
+  kw --file kwinrc --group org.kde.kdecoration2 --key theme "__aurorae__svg__ACM$name"
+  kw --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XIA
+  kw --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ""
+  busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null 2>&1 || true
+  # terminalul urmează tema
+  mkdir -p "$HOME/.local/share/konsole"
+  sed "s/^ColorScheme=.*/ColorScheme=ACM-$name/" /usr/share/konsole/ACM.profile > "$HOME/.local/share/konsole/ACM.profile" 2>/dev/null
+  echo "$id" > "$cfg/theme"
+  # accentul ales rămâne după schimbarea temei
+  [ -s "$cfg/accent" ] && plasma-apply-colorscheme --accent-color "$(cat "$cfg/accent")" >/dev/null 2>&1
+  echo "Tema ACM $name aplicată."
+}
+
 case "${1:-}" in
-  ivory) name=Ivory icons=ACM-Light ;; obsidian) name=Obsidian icons=ACM-Dark ;; olive) name=Olive icons=ACM-Dark ;;
-  *) echo "folosire: acm-theme ivory|obsidian|olive"; exit 2 ;;
+  accent)
+    [[ "${2:-}" =~ ^#[0-9A-Fa-f]{6}$ ]] || { echo "folosire: acm-theme accent '#RRGGBB'"; exit 2; }
+    echo "$2" > "$cfg/accent"
+    plasma-apply-colorscheme --accent-color "$2" >/dev/null 2>&1
+    echo "Accent $2." ;;
+  anim)
+    case "${2:-}" in 0|0.5|1) ;; *) echo "folosire: acm-theme anim 0|0.5|1"; exit 2 ;; esac
+    kw --file kdeglobals --group KDE --key AnimationDurationFactor "$2"
+    busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null 2>&1 || true
+    echo "Animații: $2." ;;
+  auto)
+    case "${2:-}" in
+      on)  echo on > "$cfg/auto"; systemctl --user enable --now acm-tema-auto.timer >/dev/null 2>&1; "$0" tick ;;
+      off) rm -f "$cfg/auto"; systemctl --user disable --now acm-tema-auto.timer >/dev/null 2>&1 ;;
+      *) echo "folosire: acm-theme auto on|off"; exit 2 ;;
+    esac
+    echo "Tema automată: $2." ;;
+  tick)
+    [ -f "$cfg/auto" ] || exit 0
+    h=$((10#$(date +%H)))
+    want=obsidian; [ "$h" -ge 7 ] && [ "$h" -lt 19 ] && want=ivory
+    [ "$(cat "$cfg/theme" 2>/dev/null)" = "$want" ] || apply_theme "$want" ;;
+  status)
+    echo "theme=$(cat "$cfg/theme" 2>/dev/null || echo obsidian)"
+    echo "accent=$(cat "$cfg/accent" 2>/dev/null)"
+    echo "auto=$([ -f "$cfg/auto" ] && echo on || echo off)"
+    a="$(kreadconfig6 --file kdeglobals --group KDE --key AnimationDurationFactor 2>/dev/null)"
+    echo "anim=${a:-0.5}" ;;
+  *) apply_theme "${1:-}" ;;
 esac
-id="$1"
-
-plasma-apply-lookandfeel --apply "com.acm.$id" >/dev/null 2>&1
-plasma-apply-colorscheme "ACM$name" >/dev/null 2>&1
-plasma-apply-wallpaperimage "/usr/share/wallpapers/ACM-$name/contents/images/2560x1600.png" >/dev/null 2>&1
-if command -v kwriteconfig6 >/dev/null; then
-  kwriteconfig6 --file kdeglobals --group Icons --key Theme "$icons"
-  kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae
-  kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme "__aurorae__svg__ACM$name"
-  kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XIA
-  kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ""
-fi
-busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null 2>&1 || true
-
-mkdir -p "$HOME/.config/acm" && echo "$id" > "$HOME/.config/acm/theme"
-echo "Tema ACM $name aplicată."

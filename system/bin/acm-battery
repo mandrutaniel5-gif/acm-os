@@ -1,0 +1,149 @@
+#!/usr/bin/env bash
+# Doctorul de baterie ACM OS (fără sudo).
+#   acm-battery info              starea bateriei și a doctorului, ca linii cheie=valoare
+#   acm-battery start [lung]      pornește doctorul; „lung” = etape peste o oră (utilizatorul e lângă laptop)
+#   acm-battery stop              KILL SWITCH: oprește doctorul imediat
+#
+# MacBook-ul decide singur încărcarea (cipul SMC), Linux nu o poate porni sau opri. Doctorul ține
+# laptopul la încărcător pe etape tot mai lungi, urmărește temperatura și tensiunea, se oprește
+# singur la peste 45°C și la final spune clar dacă bateria mai primește curent.
+set -uo pipefail
+MAX_TEMP=45          # °C: peste, doctorul se oprește
+MIN_CELL=2.0         # V pe celulă: sub, nu încearcă deloc
+CELLS=3              # bateria MacBookPro7,1 are 3 celule în serie
+STAGES=(10 30 60)    # minute
+LONG_STAGES=(120 240)
+dir="$HOME/.cache/acm"; state="$dir/doctor"; pidf="$dir/doctor.pid"; log="$dir/doctor.log"
+mkdir -p "$dir"
+
+bat() { for b in /sys/class/power_supply/BAT*; do [ -r "$b/present" ] && [ "$(cat "$b/present")" = 1 ] && { echo "$b"; return; }; done; }
+rd() { cat "$1" 2>/dev/null; }
+
+# temperatura bateriei în °C: din driverul bateriei sau din senzorii SMC ai Mac-ului (TB0T…)
+temp() {
+  local b="$1" t f
+  t="$(rd "$b/temp")"; [ -n "$t" ] && { echo $((t / 10)); return; }
+  for f in /sys/class/hwmon/hwmon*/temp*_label /sys/devices/platform/applesmc.768/temp*_label; do
+    [ -r "$f" ] || continue
+    case "$(rd "$f")" in TB0T|TB1T|TB2T)
+      t="$(rd "${f%_label}_input")"; [ -n "$t" ] && { echo $((t / 1000)); return; } ;;
+    esac
+  done
+}
+
+# procentul de încărcare (fin, din charge/energy dacă există)
+level() {
+  local b="$1" n f
+  n="$(rd "$b/charge_now")"; f="$(rd "$b/charge_full")"
+  [ -z "$n" ] && { n="$(rd "$b/energy_now")"; f="$(rd "$b/energy_full")"; }
+  if [ -n "$n" ] && [ -n "$f" ] && [ "$f" -gt 0 ]; then awk -v n="$n" -v f="$f" 'BEGIN{printf "%.1f", n*100/f}'
+  else rd "$b/capacity"; fi
+}
+
+volts() { local v; v="$(rd "$1/voltage_now")"; [ -n "$v" ] && awk -v v="$v" 'BEGIN{printf "%.2f", v/1e6}'; }
+
+set_state() { # set_state cheie valoare …  (rescrie fișierul de stare)
+  local tmp; tmp="$(mktemp "$dir/doctor.XXXX")"
+  [ -f "$state" ] && cat "$state" > "$tmp"
+  while [ $# -ge 2 ]; do
+    grep -v "^$1=" "$tmp" > "$tmp.n"; echo "$1=$2" >> "$tmp.n"; mv "$tmp.n" "$tmp"; shift 2
+  done
+  mv "$tmp" "$state"
+}
+running() { [ -f "$pidf" ] && kill -0 "$(cat "$pidf")" 2>/dev/null; }
+alert() { notify-send -u critical -a "ACM OS" -i battery-caution "Doctor baterie" "$1" 2>/dev/null; }
+
+info() {
+  local b; b="$(bat)"
+  if [ -z "$b" ]; then echo "present=0"; else
+    local full design cyc
+    full="$(rd "$b/charge_full")"; design="$(rd "$b/charge_full_design")"
+    [ -z "$full" ] && { full="$(rd "$b/energy_full")"; design="$(rd "$b/energy_full_design")"; }
+    echo "present=1"
+    echo "level=$(level "$b")"
+    echo "status=$(rd "$b/status")"
+    echo "voltage=$(volts "$b")"
+    v="$(volts "$b")"; [ -n "$v" ] && echo "cell=$(awk -v v="$v" -v c=$CELLS 'BEGIN{printf "%.2f", v/c}')"
+    echo "temp=$(temp "$b")"
+    [ -n "$full" ] && [ -n "$design" ] && [ "$design" -gt 0 ] && echo "health=$((full * 100 / design))"
+    cyc="$(rd "$b/cycle_count")"; [ -n "$cyc" ] && [ "$cyc" != 0 ] && echo "cycles=$cyc"
+    echo "model=$(rd "$b/model_name")"
+  fi
+  online=0; for a in /sys/class/power_supply/*/online; do [ "$(rd "$a")" = 1 ] && online=1; done
+  echo "charger=$online"
+  if running; then echo "doctor=running"; else echo "doctor=idle"; fi
+  [ -f "$state" ] && grep -v '^doctor=' "$state" | sed 's/^/d_/'
+  return 0
+}
+
+run() { # bucla doctorului (în fundal)
+  local long="$1" b t v cell stages i start end lvl0 lvl1 flat=0 total=0
+  b="$(bat)"
+  trap 'set_state phase oprit verdict "Oprit de tine (KILL SWITCH)."; rm -f "$pidf"; exit 0' TERM INT
+  : > "$log"
+  set_state phase verificare stage 0 stages 0 verdict "" started "$(date +%H:%M)"
+
+  [ -z "$b" ] && { set_state phase gata verdict "Nu găsesc nicio baterie. Verifică mufa bateriei în interiorul laptopului."; rm -f "$pidf"; return; }
+  v="$(volts "$b")"
+  if [ -n "$v" ] && awk -v v="$v" -v c=$CELLS -v m=$MIN_CELL 'BEGIN{exit !(v/c < m)}'; then
+    set_state phase refuzat verdict "Tensiune $v V (sub $MIN_CELL V pe celulă). Bateria e descărcată adânc și nu e sigur s-o încarc. Trebuie înlocuită."
+    rm -f "$pidf"; return
+  fi
+  t="$(temp "$b")"
+  if [ -n "$t" ] && [ "$t" -gt "$MAX_TEMP" ]; then
+    set_state phase refuzat verdict "Bateria are $t°C. Las laptopul să se răcească și încearcă din nou."
+    rm -f "$pidf"; return
+  fi
+
+  stages=("${STAGES[@]}"); [ "$long" = lung ] && stages+=("${LONG_STAGES[@]}")
+  set_state stages "${#stages[@]}"
+  for i in "${!stages[@]}"; do
+    start="$(date +%s)"; end=$((start + stages[i] * 60)); lvl0="$(level "$b")"
+    set_state phase etapa stage $((i + 1)) minutes "${stages[i]}" ends "$(date -d "@$end" +%H:%M)"
+    while [ "$(date +%s)" -lt "$end" ]; do
+      t="$(temp "$b")"; v="$(volts "$b")"; lvl1="$(level "$b")"
+      echo "$(date +%H:%M:%S) etapa=$((i + 1)) nivel=$lvl1 tensiune=$v temp=$t stare=$(rd "$b/status")" >> "$log"
+      set_state level "$lvl1" temp "$t" voltage "$v"
+      if [ -n "$t" ] && [ "$t" -gt "$MAX_TEMP" ]; then
+        set_state phase oprit verdict "Oprit automat: bateria a ajuns la $t°C. Scoate încărcătorul când poți și lasă laptopul să se răcească."
+        alert "Bateria a ajuns la $t°C. Doctorul s-a oprit."
+        rm -f "$pidf"; return
+      fi
+      [ "$(rd "$b/status")" = Full ] && break
+      sleep 20
+    done
+    lvl1="$(level "$b")"
+    gain="$(awk -v a="$lvl0" -v b="$lvl1" 'BEGIN{printf "%.1f", b-a}')"
+    total="$(awk -v t="$total" -v g="$gain" 'BEGIN{printf "%.1f", t+g}')"
+    echo "etapa $((i + 1)): +$gain%" >> "$log"
+    set_state "gain$((i + 1))" "$gain"
+    if [ "$(rd "$b/status")" = Full ]; then
+      set_state phase gata verdict "Bateria s-a încărcat complet (+$total% în total). Primește curent normal."
+      rm -f "$pidf"; return
+    fi
+    if awk -v g="$gain" 'BEGIN{exit !(g <= 0.2)}'; then flat=$((flat + 1)); else flat=0; fi
+    if [ "$flat" -ge 2 ]; then
+      set_state phase gata verdict "Bateria nu mai primește curent ($lvl1%). Încearcă resetarea SMC de mai jos; dacă tot nu se încarcă, bateria trebuie înlocuită."
+      rm -f "$pidf"; return
+    fi
+  done
+  set_state phase gata verdict "Gata: +$total% în total. Bateria primește curent; dacă ține puțin, capacitatea ei e uzată."
+  rm -f "$pidf"
+}
+
+case "${1:-info}" in
+  info) info ;;
+  start)
+    running && { echo "Doctorul rulează deja."; exit 0; }
+    rm -f "$state"
+    setsid "$0" _run "${2:-}" >/dev/null 2>&1 < /dev/null &
+    echo $! > "$pidf"
+    echo "Doctorul a pornit." ;;
+  _run) echo $$ > "$pidf"; run "${2:-}" ;;
+  stop)
+    if running; then kill "$(cat "$pidf")"; sleep 1; fi
+    rm -f "$pidf"
+    [ -f "$state" ] && set_state phase oprit verdict "Oprit de tine (KILL SWITCH)."
+    echo "Doctorul e oprit." ;;
+  *) echo "folosire: acm-battery info|start [lung]|stop"; exit 2 ;;
+esac

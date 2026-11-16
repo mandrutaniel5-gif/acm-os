@@ -83,14 +83,19 @@ function layout(t) {
   return `// Generat de tools/gen-themes.js — nu edita de mână.
 var top = new Panel;
 top.location = "top";
-top.height = 34;
+top.height = 36;
 top.floating = false;
 var menu = top.addWidget("org.kde.plasma.kickoff");
 menu.currentConfigGroup = ["General"];
-menu.writeConfig("icon", "acm-os");
+menu.writeConfig("icon", "acm-meniu");
+menu.writeConfig("favorites", ["google-chrome.desktop", "org.kde.dolphin.desktop", "org.kde.konsole.desktop",
+  "acm-setari.desktop", "acm-actualizari.desktop"]);
 top.addWidget("org.kde.plasma.appmenu");
 top.addWidget("org.kde.plasma.panelspacer");
 top.addWidget("org.kde.plasma.systemtray");
+var search = top.addWidget("org.kde.plasma.icon");
+search.currentConfigGroup = ["General"];
+search.writeConfig("url", "file:///usr/share/applications/acm-cautare.desktop");
 var clock = top.addWidget("org.kde.plasma.digitalclock");
 clock.currentConfigGroup = ["Appearance"];
 clock.writeConfig("showDate", "true");
@@ -108,7 +113,7 @@ dock.hiding = "none";
 var tasks = dock.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", ["applications:org.kde.dolphin.desktop", "applications:google-chrome.desktop",
-  "applications:org.kde.konsole.desktop", "applications:acm-actualizari.desktop", "applications:systemsettings.desktop"]);
+  "applications:org.kde.konsole.desktop", "applications:acm-actualizari.desktop", "applications:acm-setari.desktop"]);
 tasks.writeConfig("showOnlyCurrentDesktop", "false");
 dock.addWidget("org.kde.plasma.marginsseparator");
 dock.addWidget("org.kde.plasma.trash");
@@ -172,5 +177,24 @@ Image=ACM-${t.name}
 `);
   write(`${lf}/contents/layouts/org.kde.plasma.desktop-layout.js`, layout(t));
 }
+// Konsole: câte o schemă de culori pe temă (terminalul deschis pe Ivory, închis pe Obsidian/Olive)
+const ANSI = { dark: ['#1b1b1c', '#e0675a', '#7fb069', '#d9a85b', '#7d9fd1', '#b58cc6', '#6cb3b0', '#d8d5ce'],
+               light: ['#2a2723', '#b6443a', '#4d7f3a', '#9a6c1e', '#3d64a3', '#81508f', '#2f7f7b', '#8a847a'] };
+for (const t of Object.values(THEMES)) {
+  const a = ANSI[t.dark ? 'dark' : 'light'];
+  const c = (k, v) => `[${k}]\nColor=${rgb(v)}\n\n`;
+  let cs = c('Background', t.view) + c('BackgroundIntense', t.view) + c('Foreground', t.ink) + c('ForegroundIntense', t.ink);
+  a.forEach((v, i) => { cs += c(`Color${i}`, v) + c(`Color${i}Intense`, v); });
+  write(`konsole/ACM-${t.name}.colorscheme`, cs + `[General]\nDescription=ACM ${t.name}\nOpacity=1\n`);
+}
+write('konsole/ACM.profile', `[Appearance]
+ColorScheme=ACM-Obsidian
+Font=JetBrains Mono,11,-1,5,400,0,0,0,0,0,0,0,0,0,0,1
+
+[General]
+Name=ACM
+Parent=FALLBACK/
+TerminalMargin=12
+`);
 require('./gen-decor')(THEMES, write, rgb);
 console.log('teme generate:', Object.keys(THEMES).join(', '));
