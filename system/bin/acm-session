@@ -12,6 +12,13 @@ for face in "$HOME/.face.icon" "$HOME/.face"; do
   ln -sfn /usr/share/pixmaps/acm-os.png "$face"
 done
 
+# fără portofelul KDE: cu autentificare automată nu se deblochează niciodată și cere parola la fiecare Wi-Fi
+if command -v kwriteconfig6 >/dev/null; then
+  kwriteconfig6 --file kwalletrc --group Wallet --key Enabled false
+  kwriteconfig6 --file kwalletrc --group Wallet --key "First Use" false
+  kwriteconfig6 --file plasma-nm --group General --key SystemConnectionsByDefault true
+fi
+
 # căutarea pe Ctrl+Space
 command -v kwriteconfig6 >/dev/null && kwriteconfig6 --file kglobalshortcutsrc \
   --group services --group org.kde.krunner.desktop --key _launch $'Ctrl+Space\tAlt+Space\tAlt+F2\tSearch'

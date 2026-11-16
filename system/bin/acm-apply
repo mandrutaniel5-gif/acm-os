@@ -75,6 +75,12 @@ ok "pornire rapidă ($SESSION)"
 systemctl enable -q mbpfan 2>/dev/null || true
 for s in ModemManager.service cups-browsed.service; do systemctl disable -q --now "$s" 2>/dev/null || true; done
 systemctl enable -q acm-update-check.timer acm-firstboot.service
+# rețelele Wi-Fi salvate țin parola în sistem, nu în portofelul KDE (care cerea parola la fiecare conectare)
+if [ "$IMAGE" != 1 ] && command -v nmcli >/dev/null; then
+  nmcli -t -f NAME,TYPE connection show 2>/dev/null | sed -n 's/:802-11-wireless$//p' | while IFS= read -r c; do
+    nmcli connection modify "$c" connection.permissions "" 802-11-wireless-security.psk-flags 0 >/dev/null 2>&1 || true
+  done
+fi
 ok "servicii"
 
 # 7. Snapshot-uri (doar dacă discul e Btrfs)
