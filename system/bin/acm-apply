@@ -99,15 +99,25 @@ else
 fi
 
 # 8. Claude Code (pentru utilizatorul principal)
-if [ -n "$USER_NAME" ] && ! runuser -l "$USER_NAME" -c 'command -v claude >/dev/null && claude --version >/dev/null 2>&1'; then
-  say "instalez Claude Code"
-  runuser -l "$USER_NAME" -c 'curl -fsSL https://claude.ai/install.sh | bash' >/dev/null 2>&1
-  if runuser -l "$USER_NAME" -c '"$HOME/.local/bin/claude" --version' >/dev/null 2>&1; then
-    ok "Claude Code (nativ)"
-  else
-    # binarul nativ poate cere instrucțiuni pe care Core 2 Duo nu le are
-    npm install -g -q @anthropic-ai/claude-code >/dev/null 2>&1 && ok "Claude Code (npm)" || warn "Claude Code nu s-a instalat"
+# Se instalează o singură dată. Binarul nativ poate cere instrucțiuni pe care Core 2 Duo nu le are:
+# atunci e dat la o parte (altfel, fiind primul în PATH, verificarea pica și reinstala la fiecare actualizare).
+claude_ok() { runuser -l "$USER_NAME" -c 'claude --version' >/dev/null 2>&1; }
+native_aside() {
+  local h; h="$(getent passwd "$USER_NAME" | cut -d: -f6)"
+  if [ -e "$h/.local/bin/claude" ] && ! runuser -l "$USER_NAME" -c '"$HOME/.local/bin/claude" --version' >/dev/null 2>&1; then
+    mv -f "$h/.local/bin/claude" "$h/.local/bin/claude.nu-merge-pe-acest-procesor"
   fi
+}
+if [ -n "$USER_NAME" ] && ! claude_ok; then
+  native_aside
+  if ! claude_ok && [ ! -f "$ACM_STATE/claude-incercat" ]; then
+    say "instalez Claude Code (o singură dată)"
+    runuser -l "$USER_NAME" -c 'curl -fsSL https://claude.ai/install.sh | bash' >/dev/null 2>&1
+    native_aside
+    claude_ok || npm install -g -q @anthropic-ai/claude-code >/dev/null 2>&1
+    touch "$ACM_STATE/claude-incercat"
+  fi
+  if claude_ok; then ok "Claude Code"; else warn "Claude Code nu pornește pe acest procesor; nu mai reîncerc la fiecare actualizare"; fi
 fi
 
 # 9. Aspectul ACM: ecran de pornire, numele sistemului
