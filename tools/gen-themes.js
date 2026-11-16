@@ -83,7 +83,8 @@ function layout(t) {
   return `// Generat de tools/gen-themes.js — nu edita de mână.
 var top = new Panel;
 top.location = "top";
-top.height = 28;
+top.height = 30;
+top.floating = false;
 var menu = top.addWidget("org.kde.plasma.kickoff");
 menu.currentConfigGroup = ["General"];
 menu.writeConfig("icon", "acm-os");
@@ -94,6 +95,8 @@ var clock = top.addWidget("org.kde.plasma.digitalclock");
 clock.currentConfigGroup = ["Appearance"];
 clock.writeConfig("showDate", "true");
 clock.writeConfig("dateDisplayFormat", "BesideTime");
+clock.writeConfig("dateFormat", "custom");
+clock.writeConfig("customDateFormat", "ddd d MMM");
 
 var dock = new Panel;
 dock.location = "bottom";
@@ -117,11 +120,17 @@ for (var i = 0; i < all.length; i++) {
   d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
   d.writeConfig("Image", "file:///usr/share/wallpapers/ACM-${t.name}/");
   if (i === 0) {
-    var g = screenGeometry(d.screen);
-    var x = g.width - 270;
-    d.addWidget("org.kde.plasma.digitalclock", x, 50, 250, 120);
-    d.addWidget("org.kde.plasma.battery", x, 185, 250, 110);
-    d.addWidget("org.kde.plasma.systemmonitor.memory", x, 310, 250, 150);
+    // ecranul MacBook-ului e 1280x800; coloana de widget-uri stă în dreapta, ca în machete
+    var x = 1010, geo = "";
+    var items = [["org.kde.plasma.digitalclock", 48, 250, 130], ["org.kde.plasma.battery", 190, 250, 110],
+                 ["org.kde.plasma.systemmonitor.memory", 312, 250, 170]];
+    for (var k = 0; k < items.length; k++) {
+      var it = items[k], w = d.addWidget(it[0], x, it[1], it[2], it[3]);
+      geo += "Applet-" + w.id + ":" + x + "," + it[1] + "," + it[2] + "," + it[3] + ",0;";
+    }
+    d.currentConfigGroup = ["General"];
+    d.writeConfig("ItemGeometries-1280x800", geo);
+    d.writeConfig("ItemGeometriesHorizontal", geo);
   }
 }
 `;
@@ -142,7 +151,7 @@ ColorScheme=ACM${t.name}
 AccentColor=${rgb(t.gold)}
 
 [kdeglobals][Icons]
-Theme=${t.dark ? 'breeze-dark' : 'breeze'}
+Theme=${t.dark ? 'ACM-Dark' : 'ACM-Light'}
 
 [kdeglobals][KDE]
 widgetStyle=Breeze
@@ -154,8 +163,8 @@ name=${t.dark ? 'breeze-dark' : 'default'}
 cursorTheme=breeze_cursors
 
 [kwinrc][org.kde.kdecoration2]
-library=org.kde.breeze
-theme=Breeze
+library=org.kde.kwin.aurorae
+theme=__aurorae__svg__ACM${t.name}
 ButtonsOnLeft=XIA
 ButtonsOnRight=
 
@@ -164,4 +173,5 @@ Image=ACM-${t.name}
 `);
   write(`${lf}/contents/layouts/org.kde.plasma.desktop-layout.js`, layout(t));
 }
+require('./gen-decor')(THEMES, write, rgb);
 console.log('teme generate:', Object.keys(THEMES).join(', '));

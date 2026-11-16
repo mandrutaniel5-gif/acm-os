@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Id": "ACMIvory",
+    "Name": "ACM Ivory",
+    "Authors": [
+      {
+        "Name": "ACM"
+      }
+    ],
+    "License": "GPL"
+  }
+}

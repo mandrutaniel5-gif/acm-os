@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+<path id="decoration-topleft" d="M0 8 A8 8 0 0 1 8 0 L8 8 Z" fill="#f7f5f0"/>
+<rect id="decoration-top" x="8" y="0" width="8" height="8" fill="#f7f5f0"/>
+<path id="decoration-topright" d="M16 0 A8 8 0 0 1 24 8 L16 8 Z" fill="#f7f5f0"/>
+<rect id="decoration-left" x="0" y="8" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-center" x="8" y="8" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-right" x="16" y="8" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-bottomleft" x="0" y="16" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-bottom" x="8" y="16" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-bottomright" x="16" y="16" width="8" height="8" fill="#f7f5f0"/>
+<path id="decoration-inactive-topleft" d="M0 8 A8 8 0 0 1 8 0 L8 8 Z" fill="#f7f5f0"/>
+<rect id="decoration-inactive-top" x="8" y="0" width="8" height="8" fill="#f7f5f0"/>
+<path id="decoration-inactive-topright" d="M16 0 A8 8 0 0 1 24 8 L16 8 Z" fill="#f7f5f0"/>
+<rect id="decoration-inactive-left" x="0" y="8" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-inactive-center" x="8" y="8" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-inactive-right" x="16" y="8" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-inactive-bottomleft" x="0" y="16" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-inactive-bottom" x="8" y="16" width="8" height="8" fill="#f7f5f0"/>
+<rect id="decoration-inactive-bottomright" x="16" y="16" width="8" height="8" fill="#f7f5f0"/>
+</svg>

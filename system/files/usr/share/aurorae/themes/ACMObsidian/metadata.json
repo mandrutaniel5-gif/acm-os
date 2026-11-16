@@ -1,0 +1,12 @@
+{
+  "KPlugin": {
+    "Id": "ACMObsidian",
+    "Name": "ACM Obsidian",
+    "Authors": [
+      {
+        "Name": "ACM"
+      }
+    ],
+    "License": "GPL"
+  }
+}

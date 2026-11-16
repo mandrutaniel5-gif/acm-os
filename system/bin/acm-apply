@@ -36,6 +36,8 @@ mapfile -t PKGS < <(sed 's/#.*//' "$SYS/packages.txt" | tr -s ' \t' '\n' | grep 
 [ "$IMAGE" = 1 ] || PKGS+=("linux-headers-$(uname -r)")
 # dacă un pachet lipsește din arhivă, apt refuză tot; atunci le instalăm pe rând
 apt-get install -y -q "${PKGS[@]}" || for p in "${PKGS[@]}"; do apt-get install -y -q "$p" || warn "nu s-a instalat: $p"; done
+# ce nu face parte din ACM OS (Chrome e browserul; ecranul de bun venit KDE)
+apt-get purge -y -q plasma-welcome firefox-esr >/dev/null 2>&1 || true
 ok "pachete"
 
 # 3. Fișierele ACM OS peste sistem
@@ -105,5 +107,6 @@ ok "aspect ACM"
 # 10. Comenzile ACM și versiunea
 ln -sf "$SYS/bin/acm-update" /usr/local/bin/acm-update
 ln -sf "$SYS/bin/acm-apply"  /usr/local/bin/acm-apply
+ln -sf "$SYS/bin/acm-theme"  /usr/local/bin/acm-theme
 printf 'NAME="ACM OS"\nVERSION=%s\n' "$VERSION" > /etc/acm-release
 ok "ACM OS $VERSION aplicat"

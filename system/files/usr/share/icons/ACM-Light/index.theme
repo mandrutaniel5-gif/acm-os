@@ -1,0 +1,19 @@
+[Icon Theme]
+Name=ACM Light
+Comment=Iconițele ACM OS
+Inherits=breeze,hicolor
+Directories=apps/scalable,places/scalable
+
+[apps/scalable]
+Size=48
+MinSize=16
+MaxSize=512
+Type=Scalable
+Context=Applications
+
+[places/scalable]
+Size=48
+MinSize=16
+MaxSize=512
+Type=Scalable
+Context=Places

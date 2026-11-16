@@ -3,7 +3,7 @@ ColorScheme=ACMIvory
 AccentColor=189,154,106
 
 [kdeglobals][Icons]
-Theme=breeze
+Theme=ACM-Light
 
 [kdeglobals][KDE]
 widgetStyle=Breeze
@@ -15,8 +15,8 @@ name=default
 cursorTheme=breeze_cursors
 
 [kwinrc][org.kde.kdecoration2]
-library=org.kde.breeze
-theme=Breeze
+library=org.kde.kwin.aurorae
+theme=__aurorae__svg__ACMIvory
 ButtonsOnLeft=XIA
 ButtonsOnRight=
 

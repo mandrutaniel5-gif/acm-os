@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
 # Schimbă tema ACM OS pentru utilizatorul curent (fără sudo).
-#   acm-theme ivory|obsidian|olive [--reset-layout]
+#   acm-theme ivory|obsidian|olive
 set -uo pipefail
 case "${1:-}" in
-  ivory) name=Ivory ;; obsidian) name=Obsidian ;; olive) name=Olive ;;
-  *) echo "folosire: acm-theme ivory|obsidian|olive [--reset-layout]"; exit 2 ;;
+  ivory) name=Ivory icons=ACM-Light ;; obsidian) name=Obsidian icons=ACM-Dark ;; olive) name=Olive icons=ACM-Dark ;;
+  *) echo "folosire: acm-theme ivory|obsidian|olive"; exit 2 ;;
 esac
 id="$1"
-args=(--apply "com.acm.$id")
-[ "${2:-}" = --reset-layout ] && args+=(--resetLayout)
 
-plasma-apply-lookandfeel "${args[@]}"
+plasma-apply-lookandfeel --apply "com.acm.$id" >/dev/null 2>&1
 plasma-apply-colorscheme "ACM$name" >/dev/null 2>&1
 plasma-apply-wallpaperimage "/usr/share/wallpapers/ACM-$name/contents/images/2560x1600.png" >/dev/null 2>&1
-# butoanele ferestrei în stânga, ca pe Mac
 if command -v kwriteconfig6 >/dev/null; then
+  kwriteconfig6 --file kdeglobals --group Icons --key Theme "$icons"
+  kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key library org.kde.kwin.aurorae
+  kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key theme "__aurorae__svg__ACM$name"
   kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnLeft XIA
   kwriteconfig6 --file kwinrc --group org.kde.kdecoration2 --key ButtonsOnRight ""
 fi
 busctl --user call org.kde.KWin /KWin org.kde.KWin reconfigure >/dev/null 2>&1 || true
 
 mkdir -p "$HOME/.config/acm" && echo "$id" > "$HOME/.config/acm/theme"
+echo "Tema ACM $name aplicată."

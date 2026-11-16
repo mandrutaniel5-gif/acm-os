@@ -3,7 +3,7 @@ ColorScheme=ACMObsidian
 AccentColor=201,165,116
 
 [kdeglobals][Icons]
-Theme=breeze-dark
+Theme=ACM-Dark
 
 [kdeglobals][KDE]
 widgetStyle=Breeze
@@ -15,8 +15,8 @@ name=breeze-dark
 cursorTheme=breeze_cursors
 
 [kwinrc][org.kde.kdecoration2]
-library=org.kde.breeze
-theme=Breeze
+library=org.kde.kwin.aurorae
+theme=__aurorae__svg__ACMObsidian
 ButtonsOnLeft=XIA
 ButtonsOnRight=
 

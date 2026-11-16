@@ -18,7 +18,14 @@ write() {
   local s="$1" c k i
   for ((i = 0; i < ${#s}; i++)); do
     c="${s:i:1}"
-    case "$c" in ' ') k=spc ;; '-') k=minus ;; '.') k=dot ;; '/') k=slash ;; *) k="$c" ;; esac
+    case "$c" in
+      ' ') k=spc ;; '-') k=minus ;; '_') k=shift-minus ;; '.') k=dot ;; ',') k=comma ;; '/') k=slash ;;
+      '|') k=shift-backslash ;; ';') k=semicolon ;; ':') k=shift-semicolon ;; "'") k=apostrophe ;;
+      '"') k=shift-apostrophe ;; '~') k=shift-grave_accent ;; '>') k=shift-dot ;; '<') k=shift-comma ;;
+      '=') k=equal ;; '&') k=shift-7 ;; '$') k=shift-4 ;; '*') k=shift-8 ;; '(') k=shift-9 ;; ')') k=shift-0 ;;
+      [A-Z]) k="shift-${c,,}" ;;
+      *) k="$c" ;;
+    esac
     m "sendkey $k"; sleep 0.08
   done
 }
@@ -32,7 +39,10 @@ keys alt-spc; sleep 3; write dolphin; sleep 3; shot 05-cautare; keys ret; sleep 
 keys ctrl-alt-t; sleep 6; shot 07-terminal
 write "acm-theme ivory";    keys ret; sleep 12; shot 08-tema-ivory
 write "acm-theme olive";    keys ret; sleep 12; shot 09-tema-olive
-write "acm-theme obsidian"; keys ret; sleep 12; shot 10-tema-obsidian; keys alt-f4; sleep 2
+write "acm-theme obsidian"; keys ret; sleep 12; shot 10-tema-obsidian
+write "clear; journalctl --user -b --no-pager | grep -iE 'plasmashell|kwin_|js: |qml' | grep -iE 'error|crash|fail|warn' | tail -32"; keys ret; sleep 4; shot 12-jurnal
+write "clear; coredumpctl list --no-pager 2>&1 | tail -5; ls ~/.config/acm; cat ~/.config/acm/theme"; keys ret; sleep 3; shot 13-stare
+keys alt-f4; sleep 2
 keys alt-spc; sleep 3; write systemsettings; sleep 2; keys ret; sleep 10; shot 11-setari
 sudo kill "$(cat /tmp/qemu.pid)" 2>/dev/null
 

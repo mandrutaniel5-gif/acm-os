@@ -3,7 +3,7 @@ ColorScheme=ACMOlive
 AccentColor=189,154,106
 
 [kdeglobals][Icons]
-Theme=breeze-dark
+Theme=ACM-Dark
 
 [kdeglobals][KDE]
 widgetStyle=Breeze
@@ -15,8 +15,8 @@ name=breeze-dark
 cursorTheme=breeze_cursors
 
 [kwinrc][org.kde.kdecoration2]
-library=org.kde.breeze
-theme=Breeze
+library=org.kde.kwin.aurorae
+theme=__aurorae__svg__ACMOlive
 ButtonsOnLeft=XIA
 ButtonsOnRight=
 
