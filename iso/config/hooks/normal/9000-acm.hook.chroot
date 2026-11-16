@@ -1,9 +1,13 @@
 #!/bin/sh
 # Pune ACM OS în imagine: clonează repository-ul la ultima versiune și aplică configurația.
 set -e
-git clone -q https://github.com/mandrutaniel5-gif/acm-os.git /opt/acm-os
-tag="$(git -C /opt/acm-os tag -l 'v*' | sed 's/^v//' | sort -V | tail -n1)"
-git -C /opt/acm-os checkout -q "v$tag"
+# /opt/acm-os vine din build.sh (commit-ul construit); altfel ultima versiune de pe GitHub
+if [ ! -d /opt/acm-os/.git ]; then
+  git clone -q https://github.com/mandrutaniel5-gif/acm-os.git /opt/acm-os
+  tag="$(git -C /opt/acm-os tag -l 'v*' | sed 's/^v//' | sort -V | tail -n1)"
+  git -C /opt/acm-os checkout -q "v$tag"
+fi
+git config --system --add safe.directory /opt/acm-os
 ACM_IMAGE=1 /opt/acm-os/system/bin/acm-apply
 
 # Instalatorul se numește „Instalează ACM OS”

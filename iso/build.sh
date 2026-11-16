@@ -21,6 +21,14 @@ lb config \
 
 cp -r "$src/iso/config/." config/
 
+# ACM OS din commit-ul care se construiește (nu ultimul tag), fără credențialele din checkout
+git config --global --add safe.directory "$src"
+git config --global --add safe.directory "$src/.git"
+mkdir -p config/includes.chroot/opt
+git clone -q "$src" config/includes.chroot/opt/acm-os
+git -C config/includes.chroot/opt/acm-os remote set-url origin https://github.com/mandrutaniel5-gif/acm-os.git
+echo "::notice::ACM OS din commit $(git -C config/includes.chroot/opt/acm-os rev-parse --short HEAD), versiunea $(cat "$src/VERSION")"
+
 # Meniul de pe stick: sigiliul ACM în loc de casca Debian, „ACM OS” în loc de „Live system”
 mkdir -p config/bootloaders
 for b in isolinux grub-pc; do
