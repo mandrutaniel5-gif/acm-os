@@ -22,7 +22,7 @@ write() {
       ' ') k=spc ;; '-') k=minus ;; '_') k=shift-minus ;; '.') k=dot ;; ',') k=comma ;; '/') k=slash ;;
       '|') k=shift-backslash ;; ';') k=semicolon ;; ':') k=shift-semicolon ;; "'") k=apostrophe ;;
       '"') k=shift-apostrophe ;; '~') k=shift-grave_accent ;; '>') k=shift-dot ;; '<') k=shift-comma ;;
-      '=') k=equal ;; '&') k=shift-7 ;; '$') k=shift-4 ;; '*') k=shift-8 ;; '(') k=shift-9 ;; ')') k=shift-0 ;;
+      '=') k=equal ;; '[') k=bracket_left ;; ']') k=bracket_right ;; '^') k=shift-6 ;; '\') k=backslash ;; '&') k=shift-7 ;; '$') k=shift-4 ;; '*') k=shift-8 ;; '(') k=shift-9 ;; ')') k=shift-0 ;;
       [A-Z]) k="shift-${c,,}" ;;
       *) k="$c" ;;
     esac
@@ -44,7 +44,7 @@ for pg in aspect baterie actualizari despre; do
   write "clear; setsid -f sh -c 'acm-setari $pg 2>>/tmp/setari.log'"; keys ret; sleep 10; shot "11-setari-$pg"; keys alt-f4; sleep 3
 done
 write "clear; journalctl --user -b --no-pager | grep -iE 'plasmashell|kwin_|js: |qml|plasmoids' | grep -iE 'error|crash|fail|warn|acm' | tail -32"; keys ret; sleep 4; shot 12-jurnal
-write "clear; grep -iE 'error|warn|qml' /tmp/setari.log | tail -12; coredumpctl list --no-pager 2>&1 | tail -4; cat ~/.config/acm/theme; acm-battery info"; keys ret; sleep 4; shot 13-stare
+write "clear; grep -iE 'error|warn|qml' /tmp/setari.log | tail -12; coredumpctl list --no-pager 2>&1 | tail -4; cat ~/.config/acm/theme; grep -A1 -i krunner ~/.config/kglobalshortcutsrc; grep -o '<default>[^<]*' /usr/share/plasma/plasmoids/org.kde.plasma.kickoff/contents/config/main.xml | head -3"; keys ret; sleep 4; shot 13-stare
 keys alt-f4; sleep 2
 sudo kill "$(cat /tmp/qemu.pid)" 2>/dev/null
 

@@ -119,6 +119,15 @@ LogoPath=/usr/share/pixmaps/acm-os.png
 Website=https://github.com/mandrutaniel5-gif/acm-os
 " "$VERSION" > /etc/xdg/kcm-about-distrc
 gtk-update-icon-cache -q /usr/share/icons/hicolor 2>/dev/null || true
+# Favoritele implicite din meniu (ale KDE-ului: Konqueror, Discover…) devin ale ACM OS
+kick=/usr/share/plasma/plasmoids/org.kde.plasma.kickoff/contents/config/main.xml
+[ -f "$kick" ] && perl -0pi -e 's|(<entry name="favorites"[^>]*>.*?<default>)[^<]*(</default>)|${1}google-chrome.desktop,org.kde.dolphin.desktop,org.kde.konsole.desktop,org.kde.plasmawindowed.desktop,acm-actualizari.desktop${2}|s' "$kick"
+# Căutarea pe Ctrl+Space: scurtătura implicită vine din lansatorul KRunner
+if [ -f /usr/share/applications/org.kde.krunner.desktop ]; then
+  mkdir -p /usr/local/share/applications
+  sed 's/^X-KDE-Shortcuts=.*/X-KDE-Shortcuts=Ctrl+Space,Alt+Space,Alt+F2,Search/' /usr/share/applications/org.kde.krunner.desktop \
+    > /usr/local/share/applications/org.kde.krunner.desktop
+fi
 # Setările ACM înlocuiesc lansatorul KDE din dock (versiunile 0.2 îi schimbau iconița)
 rm -f /usr/local/share/applications/systemsettings.desktop
 sed -i -e 's/^NAME=.*/NAME="ACM OS"/' -e "s/^PRETTY_NAME=.*/PRETTY_NAME=\"ACM OS $VERSION\"/" /usr/lib/os-release
