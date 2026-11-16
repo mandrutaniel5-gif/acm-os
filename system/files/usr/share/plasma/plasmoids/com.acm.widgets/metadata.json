@@ -1,0 +1,14 @@
+{
+  "KPlugin": {
+    "Id": "com.acm.widgets",
+    "Name": "ACM: widget-uri",
+    "Description": "Ceas, baterie, proiecte și sistem, ca în machetele ACM OS",
+    "Category": "Utilities",
+    "Icon": "acm-os",
+    "Authors": [{ "Name": "ACM" }],
+    "License": "GPL",
+    "Version": "0.2"
+  },
+  "KPackageStructure": "Plasma/Applet",
+  "X-Plasma-API-Minimum-Version": "6.0"
+}

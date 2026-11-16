@@ -31,9 +31,8 @@ echo "::notice::ACM OS din commit $(git -C config/includes.chroot/opt/acm-os rev
 
 # Meniul de pe stick: sigiliul ACM în loc de casca Debian, „ACM OS” în loc de „Live system”
 mkdir -p config/bootloaders
-for b in isolinux grub-pc; do
-  if [ -d "/usr/share/live/build/bootloaders/$b" ]; then cp -r "/usr/share/live/build/bootloaders/$b" config/bootloaders/; fi
-done
+cp -r /usr/share/live/build/bootloaders/. config/bootloaders/
+echo "::notice::fișiere splash în șabloane: $(cd config/bootloaders && find . -iname '*splash*' | xargs echo)"
 seal="$(sed -E "s/<svg [^>]*viewBox/<svg x=\"255\" y=\"40\" width=\"130\" height=\"130\" viewBox/" "$src/design/sigiliu-pe-fundal-inchis.svg")"
 cat > /tmp/splash.svg <<SVG
 <svg xmlns="http://www.w3.org/2000/svg" width="640" height="480" viewBox="0 0 640 480">
@@ -43,8 +42,8 @@ $seal
 </svg>
 SVG
 rsvg-convert -w 640 -h 480 /tmp/splash.svg -o /tmp/splash.png
-find config/bootloaders -name "splash.svg*" -exec cp /tmp/splash.svg {} \;
-find config/bootloaders -name "splash.png" -exec cp /tmp/splash.png {} \;
+find config/bootloaders -iname "splash*.svg*" -exec cp /tmp/splash.svg {} \;
+find config/bootloaders -iname "splash*.png" -exec cp /tmp/splash.png {} \;
 grep -rlE "Live system|Debian GNU/Linux" config/bootloaders | xargs -r sed -i \
   -e "s|Live system (fail-safe mode)|ACM OS (mod sigur)|g" -e "s|Live system|ACM OS|g" -e "s|Debian GNU/Linux|ACM OS|g" || true
 echo "::notice::meniu stick: $(find config/bootloaders -name "splash*" | wc -l) imagini înlocuite"

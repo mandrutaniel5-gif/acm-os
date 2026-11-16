@@ -7,7 +7,10 @@ applets="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 mkdir -p "$cfg"
 
 # poza contului = sigiliul ACM
-[ -e "$HOME/.face.icon" ] || ln -sf /usr/share/pixmaps/acm-os.png "$HOME/.face.icon"
+for face in "$HOME/.face.icon" "$HOME/.face"; do
+  [ -f "$face" ] && [ ! -L "$face" ] && continue   # poza aleasă de utilizator rămâne
+  ln -sfn /usr/share/pixmaps/acm-os.png "$face"
+done
 
 # căutarea pe Ctrl+Space
 command -v kwriteconfig6 >/dev/null && kwriteconfig6 --file kglobalshortcutsrc \

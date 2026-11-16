@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Date pentru widget-ul ACM de pe desktop, ca linii cheie=valoare.
+bat=/sys/class/power_supply/BAT0
+if [ -r "$bat/capacity" ]; then
+  echo "bat=$(cat "$bat/capacity")"
+  echo "batstate=$(cat "$bat/status")"
+else
+  echo "bat="
+fi
+awk '/MemTotal/{t=$2} /MemAvailable/{a=$2} END{printf "memused=%.1f\nmemtotal=%.1f\n", (t-a)/1048576, t/1048576}' /proc/meminfo
+echo "boot=$(systemd-analyze 2>/dev/null | sed -n 's/.*= *\([0-9.]*\)s$/\1/p' | head -n1)"
+echo "version=$(sed -n 's/^VERSION=//p' /etc/acm-release)"
+[ -f /var/lib/acm/available ] && echo "available=$(cat /var/lib/acm/available)"
+n=0
+for d in "$HOME"/Proiecte/*/; do
+  [ -d "$d" ] || continue
+  [ $n -ge 3 ] && break
+  echo "proj$n=$(basename "$d")|$(date -r "$d" +%d.%m)"
+  n=$((n + 1))
+done

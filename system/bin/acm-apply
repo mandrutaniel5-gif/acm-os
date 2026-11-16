@@ -102,6 +102,11 @@ Website=https://github.com/mandrutaniel5-gif/acm-os
 " "$VERSION" > /etc/xdg/kcm-about-distrc
 sed -i "s/^PRETTY_NAME=.*/PRETTY_NAME=\"ACM OS $VERSION\"/" /usr/lib/os-release
 gtk-update-icon-cache -q /usr/share/icons/hicolor 2>/dev/null || true
+# Setările din dock cu iconița ACM (o copie locală a lansatorului are prioritate)
+if [ -f /usr/share/applications/systemsettings.desktop ]; then
+  mkdir -p /usr/local/share/applications
+  sed "s/^Icon=.*/Icon=acm-setari/" /usr/share/applications/systemsettings.desktop > /usr/local/share/applications/systemsettings.desktop
+fi
 ok "aspect ACM"
 
 # 10. Comenzile ACM și versiunea

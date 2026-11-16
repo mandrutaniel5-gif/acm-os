@@ -18,7 +18,9 @@ const APP_ICONS = {
   'apps/system-file-manager': 'files', 'apps/org.kde.dolphin': 'files',
   'apps/utilities-terminal': 'term', 'apps/org.kde.konsole': 'term',
   'apps/system-software-update': 'update',
-  'apps/preferences-system': 'settings', 'apps/systemsettings': 'settings',
+  // nu „preferences-system”: iconițele preferences-system-* (Bluetooth, Wi-Fi…) ar cădea pe ea.
+  // Setările primesc iconița prin /usr/local/share/applications/systemsettings.desktop.
+  'apps/acm-setari': 'settings',
   'places/user-trash': 'trash', 'places/user-trash-full': 'trashFull',
 };
 

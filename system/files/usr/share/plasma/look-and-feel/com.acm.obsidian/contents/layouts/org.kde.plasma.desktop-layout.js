@@ -1,7 +1,7 @@
 // Generat de tools/gen-themes.js — nu edita de mână.
 var top = new Panel;
 top.location = "top";
-top.height = 30;
+top.height = 34;
 top.floating = false;
 var menu = top.addWidget("org.kde.plasma.kickoff");
 menu.currentConfigGroup = ["General"];
@@ -40,8 +40,7 @@ for (var i = 0; i < all.length; i++) {
   if (i === 0) {
     // ecranul MacBook-ului e 1280x800; coloana de widget-uri stă în dreapta, ca în machete
     var x = 1010, geo = "";
-    var items = [["org.kde.plasma.digitalclock", 48, 250, 130], ["org.kde.plasma.battery", 190, 250, 110],
-                 ["org.kde.plasma.systemmonitor.memory", 312, 250, 170]];
+    var items = [["com.acm.widgets", 48, 250, 560]];
     for (var k = 0; k < items.length; k++) {
       var it = items[k], w = d.addWidget(it[0], x, it[1], it[2], it[3]);
       geo += "Applet-" + w.id + ":" + x + "," + it[1] + "," + it[2] + "," + it[3] + ",0;";
