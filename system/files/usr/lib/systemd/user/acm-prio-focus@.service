@@ -1,0 +1,6 @@
+[Unit]
+Description=ACM OS: prioritate pentru aplicația activă (%i)
+
+[Service]
+Type=oneshot
+ExecStart=/opt/acm-os/system/bin/acm-prio focus %i

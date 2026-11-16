@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 # Prima pornire după instalarea din ISO: termină ce nu se poate face la construirea imaginii
-# (utilizator, autologin, snapshot-uri, Claude Code). Se repetă la fiecare pornire până reușește.
+# (utilizator, autologin, snapshot-uri). Rulează o singură dată; Claude Code se reîncearcă
+# la actualizări, nu la fiecare pornire (pe Core 2 Duo, repetarea încetinea fiecare pornire).
 set -uo pipefail
 source "$(dirname "$(readlink -f "$0")")/../lib/acm-common.sh"
 
 "$ACM_DIR/system/bin/acm-apply" || exit 1
-user="$(main_user)"
-if [ -n "$user" ] && runuser -l "$user" -c 'command -v claude >/dev/null || [ -x "$HOME/.local/bin/claude" ]'; then
-  touch "$ACM_STATE/firstboot-done"
-  [ -f /etc/snapper/configs/root ] && snapper -c root create --description "ACM OS instalat" >/dev/null
-  ok "ACM OS e gata"
-else
-  warn "Claude Code nu e încă instalat (poate lipsește internetul); reîncerc la următoarea pornire"
-fi
+touch "$ACM_STATE/firstboot-done"
+[ -f /etc/snapper/configs/root ] && snapper -c root create --description "ACM OS instalat" >/dev/null
+ok "ACM OS e gata"

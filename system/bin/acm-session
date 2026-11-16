@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Pornește la intrarea în Plasma. Un cont nou primește aspectul ACM direct din tema implicită
-# (/etc/xdg/kdeglobals). Un cont mai vechi (sau de dinainte de ACM OS 0.3) e adus la aspectul ACM o singură dată.
+# (/etc/xdg/kdeglobals). Un cont mai vechi (sau de dinainte de ACM OS 0.4) e adus la aspectul ACM o singură dată.
 set -uo pipefail
 cfg="$HOME/.config/acm"
 applets="$HOME/.config/plasma-org.kde.plasma.desktop-appletsrc"
 mkdir -p "$cfg"
+# contul copiilor are ecranul lui (com.acm.copii), fără teme și fără bara ACM
+[ "$(id -un)" = copii ] && exit 0
 
 # poza contului = sigiliul ACM
 for face in "$HOME/.face.icon" "$HOME/.face"; do
@@ -23,7 +25,7 @@ fi
 command -v kwriteconfig6 >/dev/null && kwriteconfig6 --file kglobalshortcutsrc \
   --group services --group org.kde.krunner.desktop --key _launch $'Ctrl+Space\tAlt+Space\tAlt+F2\tSearch'
 
-[ -f "$cfg/theme" ] && grep -q "icon=acm-meniu" "$applets" 2>/dev/null && exit 0
+[ -f "$cfg/theme" ] && grep -q "plugin=com.acm.launchpad" "$applets" 2>/dev/null && exit 0
 
 for _ in $(seq 60); do busctl --user status org.kde.plasmashell >/dev/null 2>&1 && break; sleep 1; done
 sleep 2
@@ -31,7 +33,7 @@ theme="$(cat "$cfg/theme" 2>/dev/null)"
 /opt/acm-os/system/bin/acm-theme "${theme:-obsidian}"
 
 # aranjamentul vechi (bara Debian) se înlocuiește: desktopul repornește și ia aranjamentul ACM
-if ! grep -q "icon=acm-meniu" "$applets" 2>/dev/null; then
+if ! grep -q "plugin=com.acm.launchpad" "$applets" 2>/dev/null; then
   systemctl --user stop plasma-plasmashell.service
   [ -f "$applets" ] && mv "$applets" "$applets.inainte-de-acm"
   systemctl --user start plasma-plasmashell.service

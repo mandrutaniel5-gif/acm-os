@@ -1,0 +1,10 @@
+// Utilizatorul principal (grupul sudo), așezat la laptop, salvează rețele Wi-Fi pentru sistem
+// fără să i se mai ceară parola de cont.
+polkit.addRule(function (action, subject) {
+  if (subject.local && subject.active && subject.isInGroup("sudo") &&
+      (action.id == "org.freedesktop.NetworkManager.settings.modify.system" ||
+       action.id == "org.freedesktop.NetworkManager.network-control" ||
+       action.id == "org.freedesktop.NetworkManager.enable-disable-wifi")) {
+    return polkit.Result.YES;
+  }
+});

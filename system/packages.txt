@@ -42,3 +42,12 @@ npm
 
 # --- aplicații ---
 google-chrome-stable
+
+# --- viteză ---
+preload                      # ține pregătite aplicațiile folosite des
+
+# --- modul copii ---
+gcompris-qt                  # jocuri care te învață
+tuxpaint                     # desen
+ktuberling                   # Cartoful
+fonts-noto-color-emoji

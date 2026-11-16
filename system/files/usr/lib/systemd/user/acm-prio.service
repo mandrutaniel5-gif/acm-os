@@ -1,0 +1,6 @@
+[Unit]
+Description=ACM OS: împarte procesorul după cât de des folosești fiecare aplicație
+
+[Service]
+Type=oneshot
+ExecStart=/opt/acm-os/system/bin/acm-prio tick

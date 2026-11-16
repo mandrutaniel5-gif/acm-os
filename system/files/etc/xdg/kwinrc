@@ -11,3 +11,4 @@ AnimationSpeed=2
 [Plugins]
 blurEnabled=false
 contrastEnabled=false
+acm-focusEnabled=true

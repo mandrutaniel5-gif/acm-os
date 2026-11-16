@@ -10,6 +10,11 @@ const ICONS = {
   settings: '<circle cx="15" cy="15" r="12" fill="#8e8e93"/><circle cx="15" cy="15" r="7" fill="none" stroke="#e9e9ec" stroke-width="2.4" stroke-dasharray="3 2.5"/><circle cx="15" cy="15" r="3.2" fill="#e9e9ec"/>',
   trash: '<path d="M8 9h14l-1.3 15a2 2 0 0 1-2 1.8h-7.4a2 2 0 0 1-2-1.8z" fill="#c9c6c0"/><rect x="6" y="6" width="18" height="3" rx="1.5" fill="#a9a59e"/>',
   trashFull: '<path d="M8 9h14l-1.3 15a2 2 0 0 1-2 1.8h-7.4a2 2 0 0 1-2-1.8z" fill="#c9c6c0"/><rect x="6" y="6" width="18" height="3" rx="1.5" fill="#a9a59e"/><path d="M11 13h8M11 17h8M11 21h6" stroke="#8e8a83" stroke-width="1.6" stroke-linecap="round"/>',
+  launchpad: '<rect x="2" y="2" width="26" height="26" rx="7" fill="#2a2a2e"/>' +
+    [7.5, 15, 22.5].map((y, r) => [7.5, 15, 22.5].map((x, c) =>
+      `<circle cx="${x}" cy="${y}" r="2.6" fill="${['#ec6a5e', '#f4bf4f', '#61c554', '#5aa9e6', '#BD9A6A', '#9b6ad6', '#e8e6e1', '#6cb3b0', '#f28b54'][r * 3 + c]}"/>`).join('')).join(''),
+  claude: '<rect x="2" y="2" width="26" height="26" rx="7" fill="#d97757"/>' +
+    [0, 45, 90, 135].map(a => `<rect x="14" y="7" width="2" height="16" rx="1" fill="#fff" transform="rotate(${a} 15 15)"/>`).join(''),
 };
 const svg = body => `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">${body}</svg>\n`;
 
@@ -21,6 +26,7 @@ const APP_ICONS = {
   // nu „preferences-system”: iconițele preferences-system-* (Bluetooth, Wi-Fi…) ar cădea pe ea.
   // Setările primesc iconița prin /usr/local/share/applications/systemsettings.desktop.
   'apps/acm-setari': 'settings',
+  'apps/acm-launchpad': 'launchpad', 'apps/acm-claude': 'claude',
   'places/user-trash': 'trash', 'places/user-trash-full': 'trashFull',
 };
 

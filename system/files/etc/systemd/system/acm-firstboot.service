@@ -9,6 +9,9 @@ ConditionKernelCommandLine=!boot=live
 Type=oneshot
 ExecStart=/opt/acm-os/system/bin/acm-firstboot
 TimeoutStartSec=30min
+# în fundal, fără să încetinească desktopul
+Nice=19
+IOSchedulingClass=idle
 
 [Install]
 WantedBy=multi-user.target

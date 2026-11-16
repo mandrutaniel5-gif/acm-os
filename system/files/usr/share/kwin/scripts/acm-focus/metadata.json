@@ -1,0 +1,13 @@
+{
+  "KPlugin": {
+    "Id": "acm-focus",
+    "Name": "ACM: prioritate pentru aplicația activă",
+    "Description": "Spune ACM OS ce aplicație folosești, ca ea să primească procesorul",
+    "Authors": [{ "Name": "ACM" }],
+    "License": "GPL",
+    "EnabledByDefault": true
+  },
+  "X-Plasma-API": "javascript",
+  "X-Plasma-MainScript": "code/main.js",
+  "KPackageStructure": "KWin/Script"
+}

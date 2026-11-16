@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Pornește modul copii: la următoarea intrare (imediat după ieșirea din cont), laptopul intră
+# în contul „copii”. Rulat prin pkexec (fără parolă pentru utilizatorul de la laptop).
+set -euo pipefail
+id copii >/dev/null 2>&1 || { echo "Contul copii lipsește; rulează sudo acm-apply"; exit 1; }
+conf=/etc/sddm.conf.d/acm-autologin.conf
+session="$(sed -n 's/^Session=//p' "$conf" 2>/dev/null)"
+printf '[Autologin]\nUser=copii\nSession=%s\nRelogin=true\n' "${session:-plasma}" > "$conf"

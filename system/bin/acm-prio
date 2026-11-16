@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+# Împarte procesorul ca pe Mac: aplicația din față primește cel mai mult, cele folosite des
+# rămân pregătite, cele nefolosite de mult primesc foarte puțin (dar nu sunt oprite).
+# Cotele se aplică doar când procesorul e ocupat; când e liber, fiecare ia cât are nevoie.
+#   acm-prio focus <pid>   apelat de scriptul KWin acm-focus la schimbarea ferestrei
+#   acm-prio tick          apelat în fiecare minut de acm-prio.timer
+#   acm-prio status        cotele curente
+set -uo pipefail
+dir="$HOME/.cache/acm/prio"; mkdir -p "$dir"
+now="$(date +%s)"
+
+unit_of() { # unitatea systemd (app-*.scope / app-*.service) în care rulează procesul
+  sed -n 's|^0::.*/\(app-[^/]*\.\(scope\|service\)\)$|\1|p' "/proc/$1/cgroup" 2>/dev/null | head -n1
+}
+setw() { systemctl --user set-property --runtime "$1" CPUWeight="$2" IOWeight="$2" >/dev/null 2>&1; }
+key() { printf '%s' "$1" | md5sum | cut -c1-16; }
+
+# cota: după cât de recent ai folosit aplicația, plus un bonus după cât de des o folosești
+weight() {
+  local f="$dir/$(key "$1")" last=0 count=0 idle
+  [ -f "$f" ] && read -r last count _ < "$f"
+  idle=$(( (now - last) / 60 ))
+  local w
+  if   [ "$idle" -lt 2 ];  then w=300
+  elif [ "$idle" -lt 15 ]; then w=150
+  elif [ "$idle" -lt 60 ]; then w=50
+  else w=10; fi
+  [ "$count" -gt 100 ] && count=100
+  echo $(( w + count ))
+}
+
+case "${1:-tick}" in
+  focus)
+    u="$(unit_of "${2:-0}")"; [ -n "$u" ] || exit 0
+    f="$dir/$(key "$u")"; last=0; count=0
+    [ -f "$f" ] && read -r last count _ < "$f"
+    # o folosire nouă = revenire după cel puțin un minut
+    [ $(( now - last )) -ge 60 ] && count=$((count + 1))
+    echo "$now $count $u" > "$f"
+    prev="$(cat "$dir/active" 2>/dev/null)"
+    echo "$u" > "$dir/active"
+    setw "$u" 1000
+    [ -n "$prev" ] && [ "$prev" != "$u" ] && setw "$prev" "$(weight "$prev")"
+    ;;
+  tick)
+    active="$(cat "$dir/active" 2>/dev/null)"
+    systemctl --user list-units --type=scope,service --state=running --no-legend --plain 'app-*' 2>/dev/null |
+      awk '{print $1}' | while read -r u; do
+        [ "$u" = "$active" ] && continue
+        setw "$u" "$(weight "$u")"
+      done
+    # statisticile aplicațiilor neatinse de 30 de zile se șterg
+    find "$dir" -type f -mtime +30 ! -name active -delete 2>/dev/null
+    ;;
+  status)
+    systemctl --user list-units --type=scope,service --state=running --no-legend --plain 'app-*' 2>/dev/null |
+      awk '{print $1}' | while read -r u; do
+        printf '%5s  %s\n' "$(systemctl --user show -p CPUWeight --value "$u")" "$u"
+      done | sort -rn
+    ;;
+  *) echo "folosire: acm-prio focus <pid>|tick|status"; exit 2 ;;
+esac

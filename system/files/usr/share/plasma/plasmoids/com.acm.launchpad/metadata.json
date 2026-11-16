@@ -1,0 +1,15 @@
+{
+  "KPlugin": {
+    "Id": "com.acm.launchpad",
+    "Name": "Aplicații",
+    "Description": "Lansatorul ACM OS: toate aplicațiile, căutare, oprire",
+    "Category": "Application Launchers",
+    "Icon": "acm-launchpad",
+    "Authors": [{ "Name": "ACM" }],
+    "License": "GPL",
+    "Version": "0.4"
+  },
+  "KPackageStructure": "Plasma/Applet",
+  "X-Plasma-API-Minimum-Version": "6.0",
+  "X-Plasma-Provides": ["org.kde.plasma.launchermenu"]
+}

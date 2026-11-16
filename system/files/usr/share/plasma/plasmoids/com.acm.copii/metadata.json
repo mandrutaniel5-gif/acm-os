@@ -1,0 +1,14 @@
+{
+  "KPlugin": {
+    "Id": "com.acm.copii",
+    "Name": "ACM pentru copii",
+    "Description": "Ecranul modului copii: butoane mari pentru desen, jocuri care te învață și desene animate",
+    "Category": "Utilities",
+    "Icon": "face-smile",
+    "Authors": [{ "Name": "ACM" }],
+    "License": "GPL",
+    "Version": "0.4"
+  },
+  "KPackageStructure": "Plasma/Applet",
+  "X-Plasma-API-Minimum-Version": "6.0"
+}

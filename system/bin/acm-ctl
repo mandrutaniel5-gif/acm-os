@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Comenzi rapide pentru paginile Wi-Fi, Bluetooth și Sunet din Setările ACM.
+# Răspunde cu linii cheie=valoare.
+#   acm-ctl wifi                    starea + rețelele din jur
+#   acm-ctl wifi-on|wifi-off
+#   acm-ctl wifi-connect <ssid> [parola]
+#   acm-ctl wifi-forget <ssid>
+#   acm-ctl bt                      starea + dispozitivele
+#   acm-ctl bt-on|bt-off|bt-scan
+#   acm-ctl bt-pair|bt-connect|bt-disconnect|bt-remove <mac>
+#   acm-ctl sound                   volum difuzoare și microfon
+#   acm-ctl volume <0-100> | mute | mic <0-100> | mic-mute
+set -uo pipefail
+
+wifi() {
+  echo "wifi=$(nmcli -t -f WIFI general 2>/dev/null)"
+  local known; known="$(nmcli -t -f NAME,TYPE connection show 2>/dev/null | sed -n 's/:802-11-wireless$//p')"
+  # SSID-ul la final, ca să poată conține „:”
+  nmcli -t -e no -f IN-USE,SIGNAL,SECURITY,SSID device wifi list --rescan auto 2>/dev/null |
+    awk -F: -v known="$known" '
+      BEGIN { n = split(known, k, "\n"); for (i = 1; i <= n; i++) saved[k[i]] = 1 }
+      { ssid = $0; for (i = 1; i <= 3; i++) sub(/^[^:]*:/, "", ssid)
+        if (ssid == "" || seen[ssid]++) next
+        print "net=" ($1 == "*" ? 1 : 0) "|" $2 "|" ($3 != "" && $3 != "--" ? 1 : 0) "|" (ssid in saved ? 1 : 0) "|" ssid }'
+}
+
+bt() {
+  local p; p="$(bluetoothctl show 2>/dev/null | sed -n 's/^\s*Powered: //p' | head -n1)"
+  echo "bt=${p:-absent}"
+  bluetoothctl devices 2>/dev/null | while read -r _ mac name; do
+    info="$(bluetoothctl info "$mac" 2>/dev/null)"
+    paired=0; conn=0
+    grep -q "Paired: yes" <<<"$info" && paired=1
+    grep -q "Connected: yes" <<<"$info" && conn=1
+    echo "dev=$mac|$paired|$conn|$name"
+  done
+}
+
+sound() {
+  local v; v="$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null)"
+  echo "volume=$(awk '{printf "%d", $2*100}' <<<"$v")"
+  echo "muted=$(grep -q MUTED <<<"$v" && echo 1 || echo 0)"
+  v="$(wpctl get-volume @DEFAULT_AUDIO_SOURCE@ 2>/dev/null)"
+  echo "mic=$(awk '{printf "%d", $2*100}' <<<"$v")"
+  echo "micmuted=$(grep -q MUTED <<<"$v" && echo 1 || echo 0)"
+  echo "output=$(wpctl inspect @DEFAULT_AUDIO_SINK@ 2>/dev/null | sed -n 's/.*node.description = "\(.*\)"/\1/p' | head -n1)"
+}
+
+pct() { [[ "${1:-}" =~ ^[0-9]+$ ]] && [ "$1" -le 100 ] || { echo "error=procent invalid"; exit 2; }; }
+
+case "${1:-}" in
+  wifi) wifi ;;
+  wifi-on)  nmcli radio wifi on ;;
+  wifi-off) nmcli radio wifi off ;;
+  wifi-connect)
+    ssid="${2:-}"; [ -n "$ssid" ] || exit 2
+    if nmcli -t -f NAME connection show | grep -qxF "$ssid" && [ -z "${3:-}" ]; then
+      out="$(nmcli connection up id "$ssid" 2>&1)"
+    elif [ -n "${3:-}" ]; then
+      # rețea nouă: parola se salvează în sistem, nu mai e cerută la pornire
+      nmcli connection delete id "$ssid" >/dev/null 2>&1
+      out="$(nmcli device wifi connect "$ssid" password "$3" 2>&1)"
+    else
+      out="$(nmcli device wifi connect "$ssid" 2>&1)"
+    fi
+    if [ $? -eq 0 ]; then echo "ok=1"; else echo "ok=0"; echo "error=$(tr '\n' ' ' <<<"$out" | cut -c1-160)"; fi ;;
+  wifi-forget) nmcli connection delete id "${2:-}" >/dev/null 2>&1; echo "ok=1" ;;
+  bt) bt ;;
+  bt-on)  rfkill unblock bluetooth 2>/dev/null; bluetoothctl power on >/dev/null ;;
+  bt-off) bluetoothctl power off >/dev/null ;;
+  bt-scan) bluetoothctl --timeout 10 scan on >/dev/null 2>&1; bt ;;
+  bt-pair)
+    bluetoothctl --timeout 20 pair "${2:-}" >/dev/null 2>&1
+    bluetoothctl trust "${2:-}" >/dev/null 2>&1
+    bluetoothctl --timeout 10 connect "${2:-}" >/dev/null 2>&1; bt ;;
+  bt-connect)    bluetoothctl --timeout 10 connect "${2:-}" >/dev/null 2>&1; bt ;;
+  bt-disconnect) bluetoothctl disconnect "${2:-}" >/dev/null 2>&1; bt ;;
+  bt-remove)     bluetoothctl remove "${2:-}" >/dev/null 2>&1; bt ;;
+  sound) sound ;;
+  volume) pct "${2:-}"; wpctl set-mute @DEFAULT_AUDIO_SINK@ 0; wpctl set-volume @DEFAULT_AUDIO_SINK@ "$2%"; sound ;;
+  mute)   wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle; sound ;;
+  mic)    pct "${2:-}"; wpctl set-volume @DEFAULT_AUDIO_SOURCE@ "$2%"; sound ;;
+  mic-mute) wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle; sound ;;
+  *) echo "folosire: acm-ctl wifi|bt|sound|…"; exit 2 ;;
+esac

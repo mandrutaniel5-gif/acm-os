@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Claude Code
+Comment=Asistentul de programare, în terminal
+Exec=konsole -e bash -lc "claude; echo; read -rp 'Apasă Enter ca să închizi'"
+Icon=acm-claude
+Categories=Development;
+Keywords=claude;ai;cod;programare;

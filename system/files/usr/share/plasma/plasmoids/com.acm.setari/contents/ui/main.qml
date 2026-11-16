@@ -7,6 +7,7 @@ import org.kde.plasma.plasmoid
 import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasma5support as P5Support
 import org.kde.kirigami as Kirigami
+import org.kde.plasma.components as PlasmaComponents3
 
 PlasmoidItem {
     id: root
@@ -28,6 +29,12 @@ PlasmoidItem {
     property var bat: ({})
     property var upd: ({})
     property var about: ({})
+    property var wifi: ({ state: "", nets: [] })
+    property var bt: ({ state: "", devs: [] })
+    property var snd: ({})
+    property string pickSsid: ""
+    property string wifiMsg: ""
+    property bool btBusy: false
     property bool confirmDoctor: false
     property bool nearLaptop: false
     property var callbacks: ({})
@@ -65,16 +72,54 @@ PlasmoidItem {
             + "echo kernel=$(uname -r); echo version=$(sed -n 's/^VERSION=//p' /etc/acm-release)",
             function (o) { root.about = kv(o) })
     }
+    function q(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'" }
+    function loadWifi() {
+        run(bin + "acm-ctl wifi", function (o) {
+            var w = { state: "", nets: [] };
+            o.split("\n").forEach(function (l) {
+                if (l.indexOf("wifi=") === 0) w.state = l.slice(5);
+                if (l.indexOf("net=") === 0) {
+                    var p = l.slice(4).split("|");
+                    w.nets.push({ inuse: p[0] === "1", signal: parseInt(p[1]) || 0, secure: p[2] === "1", saved: p[3] === "1", ssid: p.slice(4).join("|") });
+                }
+            });
+            w.nets.sort(function (a, b) { return (b.inuse - a.inuse) || (b.signal - a.signal) });
+            root.wifi = w;
+        })
+    }
+    function parseBt(o) {
+        var b = { state: "", devs: [] };
+        o.split("\n").forEach(function (l) {
+            if (l.indexOf("bt=") === 0) b.state = l.slice(3);
+            if (l.indexOf("dev=") === 0) {
+                var p = l.slice(4).split("|");
+                b.devs.push({ mac: p[0], paired: p[1] === "1", conn: p[2] === "1", name: p.slice(3).join("|") });
+            }
+        });
+        root.bt = b; root.btBusy = false;
+    }
+    function loadBt() { run(bin + "acm-ctl bt", parseBt) }
+    function btDo(cmd, mac) { btBusy = true; run(bin + "acm-ctl " + cmd + (mac ? " " + mac : ""), parseBt) }
+    function loadSnd() { run(bin + "acm-ctl sound", function (o) { root.snd = kv(o) }) }
+    function connectWifi(ssid, pw) {
+        wifiMsg = "Mă conectez la " + ssid + "…";
+        run(bin + "acm-ctl wifi-connect " + q(ssid) + (pw ? " " + q(pw) : ""), function (o) {
+            var r = kv(o);
+            root.wifiMsg = r.ok === "1" ? "" : "Nu m-am putut conecta. Verifică parola.";
+            if (r.ok === "1") root.pickSsid = "";
+            root.loadWifi();
+        })
+    }
     function go(p) {
-        if (p === "wifi") return run("kcmshell6 kcm_networkmanagement");
-        if (p === "bluetooth") return run("kcmshell6 kcm_bluetooth");
-        if (p === "sunet") return run("kcmshell6 kcm_pulseaudio");
         if (p === "toate") return run("systemsettings");
         page = p; confirmDoctor = false;
         if (p === "aspect") loadLook();
         if (p === "baterie") loadBat();
         if (p === "actualizari") loadUpd();
         if (p === "despre") loadAbout();
+        if (p === "wifi") { pickSsid = ""; wifiMsg = ""; loadWifi(); }
+        if (p === "bluetooth") loadBt();
+        if (p === "sunet") loadSnd();
     }
 
     Component.onCompleted: {
@@ -82,6 +127,8 @@ PlasmoidItem {
         loadBat();
     }
     Timer { interval: 4000; repeat: true; running: true; onTriggered: root.loadBat() }
+    Timer { interval: 8000; repeat: true; running: root.page === "wifi" && root.pickSsid === ""; onTriggered: root.loadWifi() }
+    Timer { interval: 5000; repeat: true; running: root.page === "bluetooth" && !root.btBusy; onTriggered: root.loadBt() }
 
     // ---------- piese comune ----------
     component Lbl: Text { color: root.ink; font.pixelSize: 14; wrapMode: Text.WordWrap }
@@ -232,6 +279,133 @@ PlasmoidItem {
                 id: pages
                 x: 44; y: 32; width: parent.width - 88
                 spacing: 18
+
+                // ===== Wi-Fi =====
+                ColumnLayout {
+                    visible: root.page === "wifi"; Layout.fillWidth: true; spacing: 18
+                    Title { text: "Wi-Fi" }
+                    Box {
+                        Setting {
+                            label: "Wi-Fi"; last: true
+                            hint: root.wifi.state === "enabled" ? "Parolele rețelelor se salvează în sistem: nu ți se mai cer la pornire." : ""
+                            Segmented {
+                                options: ["Oprit", "Pornit"]; current: root.wifi.state === "enabled" ? 1 : 0
+                                onPicked: (i) => root.run(root.bin + "acm-ctl wifi-" + (i ? "on" : "off"), root.loadWifi)
+                            }
+                        }
+                    }
+                    Lbl { visible: root.wifiMsg !== ""; text: root.wifiMsg; color: root.accent; Layout.fillWidth: true }
+                    Box {
+                        visible: root.wifi.state === "enabled"
+                        Repeater {
+                            model: root.wifi.nets
+                            delegate: ColumnLayout {
+                                id: net
+                                required property var modelData
+                                required property int index
+                                Layout.fillWidth: true; spacing: 0
+                                Setting {
+                                    label: net.modelData.ssid
+                                    hint: net.modelData.inuse ? "Conectat" : (net.modelData.saved ? "Salvată" : "")
+                                    last: net.index === root.wifi.nets.length - 1 && root.pickSsid !== net.modelData.ssid
+                                    Text { text: net.modelData.secure ? "🔒" : ""; font.pixelSize: 12; color: root.ink2 }
+                                    Text { text: net.modelData.signal + "%"; color: root.ink2; font.pixelSize: 13 }
+                                    Btn {
+                                        visible: !net.modelData.inuse
+                                        text: "Conectează"
+                                        onClicked: {
+                                            if (net.modelData.secure && !net.modelData.saved) { root.pickSsid = net.modelData.ssid; root.wifiMsg = "" }
+                                            else root.connectWifi(net.modelData.ssid, "")
+                                        }
+                                    }
+                                    Btn { visible: net.modelData.saved; text: "Uită"; onClicked: root.run(root.bin + "acm-ctl wifi-forget " + root.q(net.modelData.ssid), root.loadWifi) }
+                                }
+                                RowLayout {
+                                    visible: root.pickSsid === net.modelData.ssid
+                                    Layout.fillWidth: true; Layout.margins: 16; spacing: 10
+                                    PlasmaComponents3.TextField {
+                                        id: pw; Layout.fillWidth: true
+                                        placeholderText: "Parola rețelei"; echoMode: TextInput.Password
+                                        onAccepted: root.connectWifi(net.modelData.ssid, text)
+                                    }
+                                    Btn { text: "Conectează"; primary: true; onClicked: root.connectWifi(net.modelData.ssid, pw.text) }
+                                }
+                            }
+                        }
+                        Lbl { visible: root.wifi.nets.length === 0; text: "Caut rețele…"; color: root.ink2; Layout.margins: 20 }
+                    }
+                }
+
+                // ===== Bluetooth =====
+                ColumnLayout {
+                    visible: root.page === "bluetooth"; Layout.fillWidth: true; spacing: 18
+                    Title { text: "Bluetooth" }
+                    Box {
+                        Setting {
+                            label: "Bluetooth"; last: true
+                            hint: root.bt.state === "absent" ? "Nu găsesc placa Bluetooth." : ""
+                            Segmented {
+                                visible: root.bt.state !== "absent"
+                                options: ["Oprit", "Pornit"]; current: root.bt.state === "yes" ? 1 : 0
+                                onPicked: (i) => root.btDo(i ? "bt-on" : "bt-off")
+                            }
+                        }
+                    }
+                    Box {
+                        visible: root.bt.state === "yes"
+                        Repeater {
+                            model: root.bt.devs
+                            delegate: Setting {
+                                id: dev
+                                required property var modelData
+                                label: dev.modelData.name
+                                hint: dev.modelData.conn ? "Conectat" : (dev.modelData.paired ? "Asociat" : "Disponibil")
+                                Btn {
+                                    text: dev.modelData.conn ? "Deconectează" : (dev.modelData.paired ? "Conectează" : "Asociază")
+                                    onClicked: root.btDo(dev.modelData.conn ? "bt-disconnect" : (dev.modelData.paired ? "bt-connect" : "bt-pair"), dev.modelData.mac)
+                                }
+                                Btn { visible: dev.modelData.paired; text: "Uită"; onClicked: root.btDo("bt-remove", dev.modelData.mac) }
+                            }
+                        }
+                        Setting {
+                            label: root.btBusy ? "Lucrez…" : "Caută dispozitive noi (căști, mouse, boxe)"; last: true
+                            Btn { text: "Caută"; primary: true; opacity: root.btBusy ? 0.4 : 1; onClicked: if (!root.btBusy) root.btDo("bt-scan") }
+                        }
+                    }
+                }
+
+                // ===== Sunet =====
+                ColumnLayout {
+                    visible: root.page === "sunet"; Layout.fillWidth: true; spacing: 18
+                    Title { text: "Sunet" }
+                    Box {
+                        Setting {
+                            label: "Volum"; hint: root.snd.output || ""
+                            PlasmaComponents3.Slider {
+                                implicitWidth: 240; from: 0; to: 100; stepSize: 5
+                                value: parseInt(root.snd.volume) || 0
+                                onMoved: root.run(root.bin + "acm-ctl volume " + Math.round(value), root.loadSnd)
+                            }
+                            Lbl { text: (root.snd.volume || "0") + "%"; Layout.preferredWidth: 44 }
+                        }
+                        Setting {
+                            label: "Fără sunet"
+                            Segmented {
+                                options: ["Nu", "Da"]; current: root.snd.muted === "1" ? 1 : 0
+                                onPicked: (i) => { if ((i === 1) !== (root.snd.muted === "1")) root.run(root.bin + "acm-ctl mute", root.loadSnd) }
+                            }
+                        }
+                        Setting {
+                            label: "Microfon"; last: true
+                            PlasmaComponents3.Slider {
+                                implicitWidth: 240; from: 0; to: 100; stepSize: 5
+                                value: parseInt(root.snd.mic) || 0
+                                onMoved: root.run(root.bin + "acm-ctl mic " + Math.round(value), root.loadSnd)
+                            }
+                            Lbl { text: (root.snd.mic || "0") + "%"; Layout.preferredWidth: 44 }
+                        }
+                    }
+                }
 
                 // ===== Aspect =====
                 ColumnLayout {

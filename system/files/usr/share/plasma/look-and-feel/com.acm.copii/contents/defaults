@@ -1,0 +1,14 @@
+[kdeglobals][General]
+ColorScheme=ACMIvory
+
+[kdeglobals][Icons]
+Theme=ACM-Light
+
+[plasmarc][Theme]
+name=default
+
+[kwinrc][org.kde.kdecoration2]
+library=org.kde.kwin.aurorae
+theme=__aurorae__svg__ACMIvory
+ButtonsOnLeft=XIA
+ButtonsOnRight=

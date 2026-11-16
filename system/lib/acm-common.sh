@@ -31,7 +31,7 @@ installed_version() {
 
 # Primul utilizator normal (UID 1000+), cel care folosește laptopul.
 main_user() {
-  awk -F: '$3>=1000 && $3<60000 {print $1; exit}' "${ACM_PASSWD:-/etc/passwd}"
+  awk -F: '$3>=1000 && $3<60000 && $1!="copii" {print $1; exit}' "${ACM_PASSWD:-/etc/passwd}"
 }
 
 # Adaugă contrib/non-free la liniile Debian dintr-un sources.list clasic (stdin -> stdout).

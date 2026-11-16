@@ -3,10 +3,8 @@ var top = new Panel;
 top.location = "top";
 top.height = 40;
 top.floating = false;
-var menu = top.addWidget("org.kde.plasma.kickoff");
-menu.currentConfigGroup = ["General"];
-menu.writeConfig("icon", "acm-meniu");
-menu.writeConfig("favorites", "google-chrome.desktop,org.kde.dolphin.desktop,org.kde.konsole.desktop,org.kde.plasmawindowed.desktop,acm-actualizari.desktop");
+var menu = top.addWidget("com.acm.launchpad");
+menu.globalShortcut = "Alt+F1";
 top.addWidget("org.kde.plasma.appmenu");
 top.addWidget("org.kde.plasma.panelspacer");
 top.addWidget("org.kde.plasma.systemtray");
@@ -27,10 +25,14 @@ dock.alignment = "center";
 dock.lengthMode = "fit";
 dock.floating = true;
 dock.hiding = "none";
+var pad = dock.addWidget("com.acm.launchpad");
+pad.currentConfigGroup = ["General"];
+pad.writeConfig("icon", "acm-launchpad");
 var tasks = dock.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", ["applications:org.kde.dolphin.desktop", "applications:google-chrome.desktop",
-  "applications:org.kde.konsole.desktop", "applications:acm-actualizari.desktop", "applications:org.kde.plasmawindowed.desktop"]);
+  "applications:org.kde.konsole.desktop", "applications:acm-claude.desktop", "applications:org.kde.gwenview.desktop",
+  "applications:acm-actualizari.desktop", "applications:org.kde.plasmawindowed.desktop"]);
 tasks.writeConfig("showOnlyCurrentDesktop", "false");
 dock.addWidget("org.kde.plasma.marginsseparator");
 dock.addWidget("org.kde.plasma.trash");

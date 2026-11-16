@@ -39,7 +39,7 @@ apt-get install -y -q "${PKGS[@]}" || for p in "${PKGS[@]}"; do apt-get install 
 # ce nu face parte din ACM OS (Chrome e browserul; ecranul de bun venit KDE)
 apt-get purge -y -q plasma-welcome firefox-esr >/dev/null 2>&1 || true
 # aplicații KDE pe care ACM OS le înlocuiește (Chrome, Setări ACM, acm-update), doar dacă nu iau desktopul cu ele
-for p in konqueror plasma-discover khelpcenter; do
+for p in konqueror plasma-discover khelpcenter kdeconnect; do
   dpkg -s "$p" >/dev/null 2>&1 || continue
   if apt-get -s purge "$p" | grep -qE '^(Remv|Purg) (plasma-desktop|plasma-workspace|systemsettings|dolphin|konsole) '; then
     warn "păstrez $p (alte componente depind de el)"
@@ -67,7 +67,9 @@ SESSION=plasma
 [ -f /usr/share/xsessions/plasmax11.desktop ] && SESSION=plasmax11
 if [ -n "$USER_NAME" ]; then
   mkdir -p /etc/sddm.conf.d
-  printf '[Autologin]\nUser=%s\nSession=%s\nRelogin=false\n' "$USER_NAME" "$SESSION" > /etc/sddm.conf.d/acm-autologin.conf
+  # dacă modul copii e pornit, rămâne pornit
+  who="$USER_NAME"; grep -q '^User=copii$' /etc/sddm.conf.d/acm-autologin.conf 2>/dev/null && who=copii
+  printf '[Autologin]\nUser=%s\nSession=%s\nRelogin=true\n' "$who" "$SESSION" > /etc/sddm.conf.d/acm-autologin.conf
 fi
 ok "pornire rapidă ($SESSION)"
 
@@ -75,6 +77,12 @@ ok "pornire rapidă ($SESSION)"
 systemctl enable -q mbpfan 2>/dev/null || true
 for s in ModemManager.service cups-browsed.service; do systemctl disable -q --now "$s" 2>/dev/null || true; done
 systemctl enable -q acm-update-check.timer acm-firstboot.service
+# pornire rapidă: nimic nu așteaptă rețeaua; preload ține pregătite aplicațiile folosite des
+systemctl disable -q NetworkManager-wait-online.service 2>/dev/null || true
+systemctl enable -q preload 2>/dev/null || true
+systemctl --global enable -q acm-prio.timer 2>/dev/null || true
+sysctl -q --system >/dev/null 2>&1 || true
+[ "$IMAGE" = 1 ] || touch "$ACM_STATE/firstboot-done"
 # rețelele Wi-Fi salvate țin parola în sistem, nu în portofelul KDE (care cerea parola la fiecare conectare)
 if [ "$IMAGE" != 1 ] && command -v nmcli >/dev/null; then
   nmcli -t -f NAME,TYPE connection show 2>/dev/null | sed -n 's/:802-11-wireless$//p' | while IFS= read -r c; do
@@ -132,11 +140,78 @@ fi
 rm -f /usr/local/share/applications/systemsettings.desktop
 sed -i -e 's/^NAME=.*/NAME="ACM OS"/' -e "s/^PRETTY_NAME=.*/PRETTY_NAME=\"ACM OS $VERSION\"/" /usr/lib/os-release
 printf 'ACM OS %s \\n \\l\n\n' "$VERSION" > /etc/issue
+# Aplicațiile cu nume ACM, în română; utilitarele KDE de care nu ai nevoie nu mai apar în lansator.
+# Copii locale în /usr/local/share/applications (au prioritate și supraviețuiesc actualizărilor).
+mkdir -p /usr/local/share/applications
+while IFS='|' read -r id name; do
+  src="/usr/share/applications/$id.desktop"; [ -f "$src" ] || continue
+  awk -v name="$name" '
+    /^\[/ { sec = $0; print; if (sec == "[Desktop Entry]") print "Name=" name; next }
+    sec == "[Desktop Entry]" && /^(Name|GenericName)(\[[^]]*\])?=/ { next }
+    { print }' "$src" > "/usr/local/share/applications/$id.desktop"
+done <<'NAMES'
+org.kde.dolphin|Fișiere
+org.kde.konsole|Terminal
+org.kde.gwenview|Poze
+org.kde.okular|Documente
+org.kde.ark|Arhive
+org.kde.spectacle|Captură de ecran
+org.kde.kwrite|Notițe
+org.kde.kate|Editor de cod
+org.kde.kcalc|Calculator
+org.kde.plasma-systemmonitor|Monitor activitate
+google-chrome|Chrome
+NAMES
+for id in systemsettings kdesystemsettings org.kde.kinfocenter org.kde.kmenuedit org.kde.khelpcenter \
+          org.kde.kwalletmanager5 org.kde.kwalletmanager org.kde.discover org.kde.konqueror org.kde.ksystemlog \
+          org.kde.drkonqi org.kde.kfind org.kde.plasma-welcome org.kde.kdeconnect.app org.kde.kdeconnect.sms \
+          org.kde.kdeconnect-settings org.kde.kdeconnect.nonplasma org.kde.plasma.emojier org.kde.kuserfeedback-console \
+          org.kde.kmousetool org.kde.kmag org.kde.kmouth org.kde.klipper org.kde.plasma.themeexplorer \
+          xterm debian-xterm debian-uxterm vim gvim nm-connection-editor display-im6.q16 htop info yelp \
+          install-debian org.freedesktop.IBus.Setup ibus-setup im-config qv4l2 qvidcap; do
+  src="/usr/share/applications/$id.desktop"; [ -f "$src" ] || continue
+  awk '{ print } /^\[Desktop Entry\]$/ { print "NoDisplay=true" }' "$src" | grep -v '^NoDisplay=false' \
+    > "/usr/local/share/applications/$id.desktop"
+done
+update-desktop-database -q /usr/local/share/applications 2>/dev/null || true
 ok "aspect ACM"
+
+# Modul copii: contul „copii”, fără parolă, cu ecranul de butoane mari și fără setări
+if [ "$IMAGE" != 1 ]; then
+  if ! id copii >/dev/null 2>&1; then
+    useradd -m -u 2000 -c "Copii" -s /bin/bash -G audio,video copii && passwd -d copii >/dev/null
+  fi
+  kh="$(getent passwd copii | cut -d: -f6)"
+  if [ -n "$kh" ]; then
+    install -d -o copii -g copii "$kh/.config"
+    cat > "$kh/.config/kdeglobals" <<'KIDS'
+[KDE]
+LookAndFeelPackage=com.acm.copii
+
+[General]
+ColorScheme=ACMIvory
+
+[Icons]
+Theme=ACM-Light
+
+[KDE Action Restrictions][$i]
+run_command=false
+shell_access=false
+action/run_command=false
+logout=false
+lock_screen=false
+plasma/allow_configure_when_locked=false
+plasma-desktop/add_activities=false
+KIDS
+    printf '[Daemon]\nAutolock=false\nLockOnResume=false\n' > "$kh/.config/kscreenlockerrc"
+    chown copii:copii "$kh/.config/kdeglobals" "$kh/.config/kscreenlockerrc"
+  fi
+  ok "mod copii pregătit"
+fi
 
 # 10. Comenzile ACM și versiunea
 ln -sf "$SYS/bin/acm-update" /usr/local/bin/acm-update
 ln -sf "$SYS/bin/acm-apply"  /usr/local/bin/acm-apply
-for c in acm-theme acm-battery acm-setari; do ln -sf "$SYS/bin/$c" "/usr/local/bin/$c"; done
+for c in acm-theme acm-battery acm-setari acm-ctl acm-apps acm-prio; do ln -sf "$SYS/bin/$c" "/usr/local/bin/$c"; done
 printf 'NAME="ACM OS"\nVERSION=%s\n' "$VERSION" > /etc/acm-release
 ok "ACM OS $VERSION aplicat"

@@ -1,0 +1,16 @@
+{
+  "KPackageStructure": "Plasma/LookAndFeel",
+  "X-Plasma-APIVersion": "2",
+  "KPlugin": {
+    "Id": "com.acm.copii",
+    "Name": "ACM pentru copii",
+    "Description": "Modul copii al ACM OS",
+    "Authors": [
+      {
+        "Name": "ACM"
+      }
+    ],
+    "License": "GPL-2.0+",
+    "Version": "0.4"
+  }
+}

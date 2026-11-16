@@ -85,10 +85,8 @@ var top = new Panel;
 top.location = "top";
 top.height = 40;
 top.floating = false;
-var menu = top.addWidget("org.kde.plasma.kickoff");
-menu.currentConfigGroup = ["General"];
-menu.writeConfig("icon", "acm-meniu");
-menu.writeConfig("favorites", "google-chrome.desktop,org.kde.dolphin.desktop,org.kde.konsole.desktop,org.kde.plasmawindowed.desktop,acm-actualizari.desktop");
+var menu = top.addWidget("com.acm.launchpad");
+menu.globalShortcut = "Alt+F1";
 top.addWidget("org.kde.plasma.appmenu");
 top.addWidget("org.kde.plasma.panelspacer");
 top.addWidget("org.kde.plasma.systemtray");
@@ -109,10 +107,14 @@ dock.alignment = "center";
 dock.lengthMode = "fit";
 dock.floating = true;
 dock.hiding = "none";
+var pad = dock.addWidget("com.acm.launchpad");
+pad.currentConfigGroup = ["General"];
+pad.writeConfig("icon", "acm-launchpad");
 var tasks = dock.addWidget("org.kde.plasma.icontasks");
 tasks.currentConfigGroup = ["General"];
 tasks.writeConfig("launchers", ["applications:org.kde.dolphin.desktop", "applications:google-chrome.desktop",
-  "applications:org.kde.konsole.desktop", "applications:acm-actualizari.desktop", "applications:org.kde.plasmawindowed.desktop"]);
+  "applications:org.kde.konsole.desktop", "applications:acm-claude.desktop", "applications:org.kde.gwenview.desktop",
+  "applications:acm-actualizari.desktop", "applications:org.kde.plasmawindowed.desktop"]);
 tasks.writeConfig("showOnlyCurrentDesktop", "false");
 dock.addWidget("org.kde.plasma.marginsseparator");
 dock.addWidget("org.kde.plasma.trash");
@@ -139,6 +141,55 @@ for (var i = 0; i < all.length; i++) {
 `;
 }
 
+// Modul copii: fără dock și fără meniuri; ecranul întreg e widget-ul cu butoane mari, blocat.
+function kidsLayout() {
+  return `// Generat de tools/gen-themes.js — nu edita de mână.
+var top = new Panel;
+top.location = "top";
+top.height = 40;
+top.floating = false;
+top.addWidget("org.kde.plasma.panelspacer");
+top.addWidget("org.kde.plasma.systemtray");
+var clock = top.addWidget("org.kde.plasma.digitalclock");
+var all = desktops();
+for (var i = 0; i < all.length; i++) {
+  var d = all[i];
+  d.wallpaperPlugin = "org.kde.image";
+  d.currentConfigGroup = ["Wallpaper", "org.kde.image", "General"];
+  d.writeConfig("Image", "file:///usr/share/wallpapers/ACM-Ivory/");
+  if (i === 0) {
+    var w = d.addWidget("com.acm.copii", 40, 60, 1200, 700);
+    var geo = "Applet-" + w.id + ":40,60,1200,700,0;";
+    d.currentConfigGroup = ["General"];
+    d.writeConfig("ItemGeometries-1280x800", geo);
+    d.writeConfig("ItemGeometriesHorizontal", geo);
+  }
+}
+locked = true;
+`;
+}
+{
+  const lf = 'plasma/look-and-feel/com.acm.copii';
+  write(`${lf}/metadata.json`, JSON.stringify({ KPackageStructure: 'Plasma/LookAndFeel', 'X-Plasma-APIVersion': '2',
+    KPlugin: { Id: 'com.acm.copii', Name: 'ACM pentru copii', Description: 'Modul copii al ACM OS',
+      Authors: [{ Name: 'ACM' }], License: 'GPL-2.0+', Version: '0.4' } }, null, 2));
+  write(`${lf}/contents/defaults`, `[kdeglobals][General]
+ColorScheme=ACMIvory
+
+[kdeglobals][Icons]
+Theme=ACM-Light
+
+[plasmarc][Theme]
+name=default
+
+[kwinrc][org.kde.kdecoration2]
+library=org.kde.kwin.aurorae
+theme=__aurorae__svg__ACMIvory
+ButtonsOnLeft=XIA
+ButtonsOnRight=
+`);
+  write(`${lf}/contents/layouts/org.kde.plasma.desktop-layout.js`, kidsLayout());
+}
 for (const [id, t] of Object.entries(THEMES)) {
   write(`color-schemes/ACM${t.name}.colors`, colors(t));
   write(`wallpapers/ACM-${t.name}/metadata.json`, JSON.stringify({

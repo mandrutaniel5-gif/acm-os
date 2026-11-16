@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# Aplicațiile pentru lansatorul ACM, ca linii app=id|nume|iconiță|fișier|deschideri.
+#   acm-apps                 lista
+#   acm-apps open <fișier>   deschide aplicația și o numără (cele folosite des apar primele)
+set -uo pipefail
+stats="$HOME/.cache/acm/launches"; mkdir -p "${stats%/*}"; touch "$stats"
+
+if [ "${1:-}" = open ]; then
+  f="${2:-}"; [ -f "$f" ] || exit 1
+  id="$(basename "$f")"
+  awk -v id="$id" '$2 == id { $1++; found = 1 } { print } END { if (!found) print 1, id }' "$stats" > "$stats.n" && mv "$stats.n" "$stats"
+  exec setsid -f kioclient exec "$f" >/dev/null 2>&1
+fi
+
+dirs=("$HOME/.local/share/applications" /usr/local/share/applications /var/lib/flatpak/exports/share/applications /usr/share/applications)
+declare -A seen
+for d in "${dirs[@]}"; do
+  [ -d "$d" ] || continue
+  for f in "$d"/*.desktop; do
+    [ -f "$f" ] || continue
+    id="$(basename "$f")"
+    [ -n "${seen[$id]:-}" ] && continue
+    seen[$id]=1
+    awk -v id="$id" -v f="$f" '
+      /^\[/ { sec = $0; next }
+      sec != "[Desktop Entry]" { next }
+      /^Type=/ { type = substr($0, 6) }
+      /^Name=/ { name = substr($0, 6) }
+      /^Name\[ro\]=/ { namero = substr($0, 10) }
+      /^Icon=/ { icon = substr($0, 6) }
+      /^NoDisplay=true/ || /^Hidden=true/ { hide = 1 }
+      /^OnlyShowIn=/ && $0 !~ /KDE/ { hide = 1 }
+      /^NotShowIn=.*KDE/ { hide = 1 }
+      END { if (type == "Application" && !hide && name != "") print "app=" id "|" (namero != "" ? namero : name) "|" icon "|" f }
+    ' "$f"
+  done
+done | while IFS= read -r line; do
+  id="${line#app=}"; id="${id%%|*}"
+  n="$(awk -v id="$id" '$2 == id { print $1 }' "$stats")"
+  echo "$line|${n:-0}"
+done
