@@ -20,6 +20,19 @@ lb config \
   --bootappend-live "boot=live components quiet splash locales=ro_RO.UTF-8 keyboard-layouts=ro timezone=Europe/Bucharest"
 
 cp -r "$src/iso/config/." config/
+
+# GRUB pe stick, pentru instalatorul Calamares (fără internet). Cele două variante se exclud
+# reciproc la instalare, așa că le descărcăm separat, cu tot cu dependențe, în pool-ul ISO-ului.
+mkdir -p config/packages.binary
+for flavor in "grub-pc" "grub-efi-amd64 grub-efi-amd64-signed shim-signed"; do
+  d="$(mktemp -d)" && mkdir -p "$d/partial"
+  apt-get install -y -q --download-only -o Dir::Cache::archives="$d" $flavor efibootmgr os-prober >/dev/null
+  cp "$d"/*.deb config/packages.binary/
+done
+echo "::notice::GRUB pe stick: $(ls config/packages.binary | wc -l) pachete"
+
+# la orice eroare, ultimele linii din jurnal apar pe pagina build-ului
+trap 'tail -n 40 lb.log 2>/dev/null | sed "s/^/::error::/"' ERR
 chmod +x config/hooks/normal/*.hook.chroot
 lb build 2>&1 | tee lb.log
 
@@ -31,7 +44,7 @@ check "ACM OS în /opt/acm-os"       "[ -f chroot/etc/acm-release ]"
 check "driver Wi-Fi wl compilat"    "ls chroot/lib/modules/*/updates/dkms/wl.ko* >/dev/null 2>&1"
 check "Google Chrome"               "[ -x chroot/opt/google/chrome/chrome ]"
 check "instalator Calamares"        "[ -x chroot/usr/bin/calamares ]"
-check "GRUB pe stick (pool)"        "ls binary/pool/main/g/grub2/grub-pc_*.deb binary/pool/main/g/grub2/grub-efi-amd64_*.deb >/dev/null 2>&1"
+check "GRUB pe stick (pool)"        "[ -n \"$(find binary/pool -name 'grub-pc_*.deb')\" ] && [ -n \"$(find binary/pool -name 'grub-efi-amd64_*.deb')\" ]"
 check "Plasma"                      "[ -x chroot/usr/bin/plasmashell ]"
 grep -h "nu s-a instalat" lb.log | sed "s/^/::warning::/" || true
 [ "$fail" = 0 ] || exit 1
