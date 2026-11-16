@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Pornește ISO-ul în QEMU (1280x800, ca MacBook-ul), îl folosește din tastatură și face capturi.
+# Capturile ajung pe ramura „screens”: screens/<tag>/NN-nume.png
+set -uo pipefail
+tag="$1"; src="$PWD"; shots="$src/shots/$tag"; mkdir -p "$shots"
+sudo apt-get update -q >/dev/null && sudo apt-get install -y -q qemu-system-x86 socat imagemagick >/dev/null
+
+mon=/tmp/qmon
+sudo qemu-system-x86_64 -enable-kvm -cpu host -m 4096 -smp 2 \
+  -cdrom "$(ls out/*.iso)" -boot d \
+  -device VGA,edid=on,xres=1280,yres=800 -usb -device usb-tablet \
+  -monitor "unix:$mon,server,nowait" -display none -daemonize -pidfile /tmp/qemu.pid
+
+m() { echo "$*" | sudo socat - "UNIX-CONNECT:$mon" >/dev/null; }
+shot() { m "screendump /tmp/s.ppm"; sleep 1; sudo convert /tmp/s.ppm "$shots/$1.png" && echo "::notice::captură $1"; }
+keys() { for k in "$@"; do m "sendkey $k"; sleep 0.2; done; }
+write() {
+  local s="$1" c k i
+  for ((i = 0; i < ${#s}; i++)); do
+    c="${s:i:1}"
+    case "$c" in ' ') k=spc ;; '-') k=minus ;; '.') k=dot ;; '/') k=slash ;; *) k="$c" ;; esac
+    m "sendkey $k"; sleep 0.08
+  done
+}
+
+sleep 8;  shot 00-meniu-stick; keys ret
+sleep 20; shot 01-pornire
+sleep 70; shot 02-desktop-prima-vedere
+sleep 60; shot 03-desktop
+keys alt-f1; sleep 4; shot 04-meniu-aplicatii; keys esc; sleep 2
+keys alt-spc; sleep 3; write dolphin; sleep 3; shot 05-cautare; keys ret; sleep 8; shot 06-fisiere; keys alt-f4; sleep 2
+keys ctrl-alt-t; sleep 6; shot 07-terminal
+write "acm-theme ivory";    keys ret; sleep 12; shot 08-tema-ivory
+write "acm-theme olive";    keys ret; sleep 12; shot 09-tema-olive
+write "acm-theme obsidian"; keys ret; sleep 12; shot 10-tema-obsidian; keys alt-f4; sleep 2
+keys alt-spc; sleep 3; write systemsettings; sleep 2; keys ret; sleep 10; shot 11-setari
+sudo kill "$(cat /tmp/qemu.pid)" 2>/dev/null
+
+# urcă pe ramura screens
+d="$(mktemp -d)" && cd "$d"
+git init -q && git config user.name "ACM CI" && git config user.email "ci@acm-os"
+git remote add origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+if git fetch -q origin screens; then git checkout -q -b screens FETCH_HEAD; else git checkout -q --orphan screens; fi
+rm -rf "$tag" && cp -r "$shots" "$tag" && git add -A && git commit -qm "capturi $tag" && git push -q origin screens
+echo "::notice::capturi: https://github.com/${GITHUB_REPOSITORY}/tree/screens/$tag"
