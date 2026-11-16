@@ -1,39 +1,34 @@
-name: ISO ACM OS
+name: ACM OS - build si test
+# Logica e in ci/run.sh (se poate schimba fara a edita acest fisier).
+#   git tag iso-X.Y.Z  -> ISO + capturi din VM + publicare
+#   git tag test-NUME  -> ISO + capturi din VM
 on:
   push:
-    tags: ['iso-*']   # ISO doar la cerere: git tag iso-X.Y.Z; actualizările v* nu construiesc ISO
+    tags: ['iso-*', 'test-*']
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  iso:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
-      - name: Construiește ISO
+      - name: Activeaza KVM (calculator virtual rapid)
         run: |
-          set -o pipefail
-          docker run --rm --privileged -v "$PWD:/w" debian:trixie bash /w/iso/build.sh 2>&1 | tee build.log
-      - name: Raportează eroarea
-        if: failure()
-        run: tail -n 60 build.log | sed 's/^/::error::/'
-      - name: Sumă de control
-        run: cd out && sha256sum *.iso | tee SHA256SUMS
-      - uses: actions/upload-artifact@v4
-        with:
-          name: acm-os-iso
-          path: out/
-          retention-days: 30
-          compression-level: 0
-      - name: Publică în Releases (dacă încape sub 2 GB)
-        if: startsWith(github.ref, 'refs/tags/')
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Build ISO + test vizual
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          size=$(stat -c %s out/*.iso)
-          files="out/SHA256SUMS"
-          [ "$size" -lt 2147483648 ] && files="out/*.iso $files"
-          gh release create "$GITHUB_REF_NAME" $files --title "ACM OS ${GITHUB_REF_NAME#v}" \
-            --notes "Pune ISO-ul pe stick cu balenaEtcher, pornește MacBook-ul ținând Option și alege stick-ul." \
-            || gh release upload "$GITHUB_REF_NAME" $files --clobber
+        run: bash ci/run.sh "$GITHUB_REF_NAME"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: acm-os
+          path: |
+            out/
+            shots/
+          retention-days: 30
+          compression-level: 0
